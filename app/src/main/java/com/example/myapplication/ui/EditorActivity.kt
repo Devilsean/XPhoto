@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.R
 import java.io.OutputStream
@@ -21,6 +22,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
 
     private var lastTouchX:Float=0.0f
     private var lastTouchY:Float=0.0f
+    private var exitAfterSave=false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +46,27 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             renderer.takeScreenshot()
             glSurfaceView.requestRender()
         }
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showExitConfirmationDialog()
+            }
+        })
     }
+
+    private fun showExitConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("退出编辑")
+            .setMessage("是否要保存当前更改")
+            .setPositiveButton("保存"){ _,_->
+                exitAfterSave=true
+                renderer.takeScreenshot()
+                glSurfaceView.requestRender()
+            }.setNegativeButton("不保存"){ _,_->
+                finish()
+            }.setNeutralButton("取消",null)
+            .show()
+    }
+
     override fun onResume(){
         super.onResume()
         glSurfaceView.onResume()
@@ -100,6 +122,9 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
                     runOnUiThread {
                         Toast.makeText(this, "图片已保存至相册", Toast.LENGTH_SHORT).show()
+                        if(exitAfterSave){
+                            finish()
+                        }
                     }
                 }
             }
@@ -109,6 +134,9 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             }
             runOnUiThread {
                 Toast.makeText(this, "图片保存失败", Toast.LENGTH_SHORT).show()
+                if(exitAfterSave){
+                    finish()
+                }
             }
         }finally{
             stream?.close()

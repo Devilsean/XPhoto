@@ -3,11 +3,11 @@
 
     <item
         android:id="@+id/navigation_home"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:icon="@android:drawable/ic_menu_camera"
         android:title="修图"/>
     <item
-        android:id="@+id/navigation_profile"
-        android:icon="@drawable/ic_launcher_foreground"
+        android:id="@+id/navigation_my"
+        android:icon="@android:drawable/ic_menu_myplaces"
         android:title="我的"/>
 
 </menu>

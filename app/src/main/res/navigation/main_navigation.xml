@@ -12,9 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_profile"
-        android:name="com.example.myapplication.ui.profile.ProfileFragment"
+        android:id="@+id/navigation_my"
+        android:name="com.example.myapplication.ui.my.MyFragment"
         android:label="我的"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_my" />
+
+    <fragment
+        android:id="@+id/navigation_settings"
+        android:name="com.example.myapplication.ui.settings.SettingsFragment"
+        android:label="设置"/>
 
 </navigation>
