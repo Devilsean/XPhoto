@@ -1,5 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 基础颜色 -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="white_alpha_70">#B3FFFFFF</color>
+
+    <!-- Material 3 Light Theme Colors -->
+    <color name="light_primary">#6200EE</color>
+    <color name="light_onPrimary">@color/white</color>
+    <color name="light_primaryContainer">#EADDFF</color>
+    <color name="light_onPrimaryContainer">#21005D</color>
+    <color name="light_secondary">#625B71</color>
+    <color name="light_onSecondary">@color/white</color>
+    <color name="light_background">#FFFBFE</color>
+    <color name="light_onBackground">#1C1B1F</color>
+    <color name="light_surface">#FFFBFE</color>
+    <color name="light_onSurface">#1C1B1F</color>
+    <color name="light_surfaceVariant">#E7E0EC</color>
+    <color name="light_onSurfaceVariant">#49454F</color>
+
+    <!-- Material 3 Dark Theme Colors -->
+    <color name="dark_primary">#BB86FC</color>
+    <color name="dark_onPrimary">@color/black</color>
+    <color name="dark_primaryContainer">#4F378B</color>
+    <color name="dark_onPrimaryContainer">#EADDFF</color>
+    <color name="dark_secondary">#CCC2DC</color>
+    <color name="dark_onSecondary">#332D41</color>
+    <color name="dark_background">#1C1B1F</color>
+    <color name="dark_onBackground">#E6E1E5</color>
+    <color name="dark_surface">#1C1B1F</color>
+    <color name="dark_onSurface">#E6E1E5</color>
+    <color name="dark_surfaceVariant">#49454F</color>
+    <color name="dark_onSurfaceVariant">#CAC4D0</color>
 </resources>

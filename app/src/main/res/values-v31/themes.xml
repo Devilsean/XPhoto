@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MyApplication" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
+        <!-- 动态颜色由系统提供，无需定义颜色 -->
+    </style>
+</resources>

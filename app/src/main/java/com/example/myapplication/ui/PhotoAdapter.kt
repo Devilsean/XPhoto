@@ -27,7 +27,7 @@ class PhotoAdapter (private val photoList:List<PhotoItem>):
             .load(photoItem.uri)
             .into(holder.photoImage)
         holder.itemView.setOnClickListener {
-            val intent= Intent(holder.itemView.context, EditorActivity::class.java).apply{
+            val intent= Intent(holder.itemView.context, EditorActivityExample::class.java).apply{
                 putExtra("image_uri",photoItem.uri.toString())
             }
             holder.itemView.context.startActivity(intent)

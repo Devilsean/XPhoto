@@ -11,13 +11,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.myapplication.R
 import com.example.myapplication.ui.AlbumActivity
-import com.example.myapplication.ui.EditorActivity
+import com.example.myapplication.ui.EditorActivityExample
+import kotlinx.coroutines.launch
 import java.io.File
 
 class HomeFragment : Fragment() {
@@ -28,7 +30,7 @@ class HomeFragment : Fragment() {
         if (isSuccess) {
             latestTmpUri?.let { uri ->
                 // 图片拍摄成功，跳转到编辑页面
-                val intent = Intent(requireActivity(), EditorActivity::class.java)
+                val intent = Intent(requireActivity(), EditorActivityExample::class.java)
                 intent.putExtra("image_uri", uri.toString())
                 startActivity(intent)
             }
@@ -55,6 +57,25 @@ class HomeFragment : Fragment() {
         override fun getItemCount() = items.size
     }
 
+    // --- 轮播图 Adapter ---
+    class CarouselAdapter(private val items: List<Int>) : RecyclerView.Adapter<CarouselAdapter.ViewHolder>() {
+        class ViewHolder(val view: View) : RecyclerView.ViewHolder(view)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val imageView = android.widget.ImageView(parent.context).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            }
+            return ViewHolder(imageView)
+        }
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            (holder.view as android.widget.ImageView).setImageResource(items[position])
+        }
+        override fun getItemCount() = items.size
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,8 +85,13 @@ class HomeFragment : Fragment() {
 
         // --- 1. 设置轮播图 ---
         val viewPager: ViewPager2 = view.findViewById(R.id.carousel_view_pager)
-        // TODO: 此处需要一个为 ViewPager2 准备的 Adapter
-
+        val carouselItems = listOf(
+            R.drawable.ic_launcher_background,
+            R.drawable.ic_launcher_foreground,
+            R.drawable.ic_launcher_background,
+            R.drawable.ic_launcher_foreground
+        )
+        viewPager.adapter = CarouselAdapter(carouselItems)
         // --- 2. 设置核心操作点击事件 ---
         val launchCameraButton: CardView = view.findViewById(R.id.btn_launch_camera)
         val importGalleryButton: CardView = view.findViewById(R.id.btn_import_gallery)
@@ -96,13 +122,54 @@ class HomeFragment : Fragment() {
         quickAccessRecyclerView.adapter = SimpleTextAdapter(quickAccessItems)
 
 
-        // --- 4. 设置作品/草稿列表 ---
+        // --- 4. 设置作品/草稿列表（从数据库加载）---
         val draftsRecyclerView: RecyclerView = view.findViewById(R.id.drafts_recycler_view)
         draftsRecyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        val draftItems = listOf("草稿1", "草稿2", "草稿3", "草稿4", "草稿5")
-        draftsRecyclerView.adapter = SimpleTextAdapter(draftItems)
 
+        val app = requireActivity().application as com.example.myapplication.MyApplication
+        val draftRepository = app.draftRepository
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            draftRepository.allDrafts.collect { drafts ->
+                if (drafts.isEmpty()) {
+                    draftsRecyclerView.adapter = SimpleTextAdapter(listOf("暂无草稿"))
+                } else {
+                    // 创建草稿适配器，显示预览图
+                    draftsRecyclerView.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+                        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+                            val itemView = LayoutInflater.from(parent.context)
+                                .inflate(R.layout.item_draft, parent, false)
+                            return object : RecyclerView.ViewHolder(itemView) {}
+                        }
+        
+                        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+                            val draft = drafts[position]
+                            val imageView = holder.itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
+                            
+                            // 加载原始图片作为预览
+                            try {
+                                val uri = Uri.parse(draft.originalImageUri)
+                                imageView.setImageURI(uri)
+                            } catch (e: Exception) {
+                                imageView.setImageResource(android.R.color.darker_gray)
+                            }
+                            
+                            // 点击进入编辑页面
+                            holder.itemView.setOnClickListener {
+                                val intent = Intent(requireActivity(), EditorActivityExample::class.java)
+                                intent.putExtra("image_uri", draft.originalImageUri)
+                                intent.putExtra("draft_id", draft.id)
+                                startActivity(intent)
+                            }
+                        }
+        
+                        override fun getItemCount(): Int = minOf(drafts.size, 10)
+                    }
+                }
+            }
+        }
+
+        
         return view
     }
 }

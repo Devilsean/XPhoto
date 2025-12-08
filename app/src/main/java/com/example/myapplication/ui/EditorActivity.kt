@@ -12,7 +12,11 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplication.MyApplication
 import com.example.myapplication.R
+import com.example.myapplication.data.entity.EditedImage
+import kotlinx.coroutines.launch
 import java.io.OutputStream
 
 class EditorActivity : AppCompatActivity(), ScreenshotListener {
@@ -121,6 +125,16 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 if (stream != null) {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
                     runOnUiThread {
+                        lifecycleScope.launch {
+                            val app = application as MyApplication
+                            val editedImage = EditedImage(
+                                id = 0,
+                                originalImageUri = intent.getStringExtra("image_uri") ?: "",
+                                editedImageUri = uri.toString(),
+                                createdAt = System.currentTimeMillis()
+                            )
+                            app.editedImageRepository.saveEditedImage(editedImage)
+                        }
                         Toast.makeText(this, "图片已保存至相册", Toast.LENGTH_SHORT).show()
                         if(exitAfterSave){
                             finish()
