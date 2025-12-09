@@ -7,6 +7,76 @@
     android:layout_height="match_parent"
     tools:context=".ui.EditorActivity">
 
+    <!-- 顶部工具栏 -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/top_toolbar_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:fitsSystemWindows="true"
+        app:cardBackgroundColor="#80000000"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="4dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <!-- 返回按钮 -->
+            <ImageButton
+                android:id="@+id/back_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back"
+                android:contentDescription="返回"
+                android:tint="@color/white" />
+
+            <!-- 标题 -->
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="图片编辑"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp" />
+
+            <!-- 撤销按钮 -->
+            <ImageButton
+                android:id="@+id/undo_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back_up"
+                android:contentDescription="撤销"
+                android:tint="@color/white"
+                android:layout_marginEnd="8dp" />
+
+            <!-- 重做按钮 -->
+            <ImageButton
+                android:id="@+id/redo_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_forward_up"
+                android:contentDescription="重做"
+                android:tint="@color/white" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <android.opengl.GLSurfaceView
         android:id="@+id/gl_surface_view"
         android:layout_width="0dp"
@@ -35,7 +105,7 @@
         android:layout_marginBottom="16dp"
         android:visibility="gone"
         android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/crop_action_layout"
+        app:layout_constraintBottom_toTopOf="@id/crop_action_card"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -103,102 +173,134 @@
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- 裁剪操作按钮 -->
-    <LinearLayout
-        android:id="@+id/crop_action_layout"
+    <!-- 裁剪操作按钮（使用卡片背景） -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/crop_action_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/editor_button_layout"
+        app:cardBackgroundColor="#CC000000"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:layout_constraintBottom_toTopOf="@id/editor_button_card"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <Button
-            android:id="@+id/crop_reset_button"
-            style="@style/Widget.Material3.Button.TextButton"
+        <LinearLayout
+            android:id="@+id/crop_action_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="重置"
-            app:icon="@drawable/ic_refresh"
-            app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/crop_rotate_button"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:text="旋转"
-            app:icon="@drawable/ic_rotate"
-            app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            <Button
+                android:id="@+id/crop_reset_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="重置"
+                android:textColor="@color/white"
+                app:icon="@drawable/ic_refresh"
+                app:iconGravity="textStart"
+                app:iconPadding="4dp"
+                app:iconTint="@color/white" />
 
-        <Button
-            android:id="@+id/crop_cancel_button"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="取消"
-            app:icon="@drawable/ic_x_vector"
-            app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            <Button
+                android:id="@+id/crop_rotate_button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="旋转"
+                android:textColor="@color/white"
+                app:icon="@drawable/ic_rotate"
+                app:iconGravity="textStart"
+                app:iconPadding="4dp"
+                app:iconTint="@color/white"
+                app:strokeColor="@color/white_alpha_70" />
 
-        <Button
-            android:id="@+id/crop_confirm_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="确认"
-            app:icon="@drawable/ic_check"
-            app:iconGravity="textStart"
-            app:iconPadding="4dp" />
+            <Button
+                android:id="@+id/crop_cancel_button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="取消"
+                android:textColor="@color/white"
+                app:icon="@drawable/ic_x_vector"
+                app:iconGravity="textStart"
+                app:iconPadding="4dp"
+                app:iconTint="@color/white"
+                app:strokeColor="@color/white_alpha_70" />
 
-    </LinearLayout>
+            <Button
+                android:id="@+id/crop_confirm_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="确认"
+                app:icon="@drawable/ic_check"
+                app:iconGravity="textStart"
+                app:iconPadding="4dp" />
 
-    <!-- 编辑器主按钮 -->
-    <LinearLayout
-        android:id="@+id/editor_button_layout"
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- 编辑器主按钮（使用卡片背景） -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/editor_button_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        app:cardBackgroundColor="#CC000000"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <Button
-            android:id="@+id/crop_button"
+        <LinearLayout
+            android:id="@+id/editor_button_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="裁剪"
-            app:icon="@drawable/ic_crop_vector"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/grayscale_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="灰度"
-            app:icon="@drawable/ic_palette_vector"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
+            <Button
+                android:id="@+id/crop_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="裁剪"
+                app:icon="@drawable/ic_crop_vector"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
 
-        <Button
-            android:id="@+id/export_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="导出"
-            app:icon="@drawable/ic_filter_vector"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
+            <Button
+                android:id="@+id/grayscale_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="灰度"
+                app:icon="@drawable/ic_palette_vector"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
 
-    </LinearLayout>
+            <Button
+                android:id="@+id/export_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="导出"
+                app:icon="@drawable/ic_filter_vector"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -86,6 +86,29 @@ class EditorActivity : AppCompatActivity(),ScreenshotListener {
     }
     
     private fun setupButtons() {
+        // 顶部工具栏按钮
+        findViewById<View>(R.id.back_button)?.setOnClickListener {
+            Log.d("EditorActivity", "Back button clicked")
+            if (isCropMode) {
+                exitCropMode()
+            } else {
+                showExitConfirmationDialog()
+            }
+        }
+        
+        findViewById<View>(R.id.undo_button)?.setOnClickListener {
+            Log.d("EditorActivity", "Undo button clicked")
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            Toast.makeText(this, "撤销功能待实现", Toast.LENGTH_SHORT).show()
+        }
+        
+        findViewById<View>(R.id.redo_button)?.setOnClickListener {
+            Log.d("EditorActivity", "Redo button clicked")
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            Toast.makeText(this, "重做功能待实现", Toast.LENGTH_SHORT).show()
+        }
+        
+        // 底部编辑按钮
         findViewById<Button>(R.id.crop_button)?.setOnClickListener {
             Log.d("EditorActivity", "Crop button clicked")
             Toast.makeText(this, "裁剪按钮被点击", Toast.LENGTH_SHORT).show()
@@ -104,6 +127,7 @@ class EditorActivity : AppCompatActivity(),ScreenshotListener {
             glSurfaceView.requestRender()
         }
         
+        // 裁剪模式按钮
         findViewById<Button>(R.id.crop_cancel_button)?.setOnClickListener {
             Log.d("EditorActivity", "Cancel button clicked")
             it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -121,6 +145,7 @@ class EditorActivity : AppCompatActivity(),ScreenshotListener {
             it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             resetCrop()
         }
+        
         findViewById<Button>(R.id.crop_rotate_button)?.setOnClickListener {
             Log.d("EditorActivity", "Rotate button clicked")
             it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
