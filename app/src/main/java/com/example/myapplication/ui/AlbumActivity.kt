@@ -1,24 +1,36 @@
 package com.example.myapplication.ui
 
-import android.Manifest
-import android.content.ContentUris
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.utils.MediaStoreHelper
+import com.example.myapplication.utils.PermissionHelper
+import kotlinx.coroutines.launch
 
 class AlbumActivity : AppCompatActivity() {
-    private val requestPermissionCode=101
+    private val requestPermissionCode = 101
+    private lateinit var mediaStoreHelper: MediaStoreHelper
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var photoAdapter: PhotoAdapter
+    
+    private val mediaList = mutableListOf<MediaStoreHelper.MediaItem>()
+    private var currentPage = 0
+    private val pageSize = 50
+    private var isLoading = false
+    private var hasMoreData = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,94 +40,110 @@ class AlbumActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        
+        mediaStoreHelper = MediaStoreHelper(this)
+        initViews()
         checkPermissionAndLoadPhotos()
     }
-    private fun checkPermissionAndLoadPhotos(){
-        if(ContextCompat.checkSelfPermission(
-            this, 
-            Manifest.permission.READ_MEDIA_IMAGES
-        ) == PackageManager.PERMISSION_GRANTED&& ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
-            && ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_MEDIA_VIDEO
-        )== PackageManager.PERMISSION_GRANTED
-        ){
-            loadPhotos()
-        }else{
+    
+    private fun initViews() {
+        recyclerView = findViewById(R.id.rv_album)
+        progressBar = findViewById(R.id.progress_bar)
+        
+        photoAdapter = PhotoAdapter(mediaList)
+        recyclerView.layoutManager = GridLayoutManager(this, 3)
+        recyclerView.adapter = photoAdapter
+        
+        // 添加滚动监听实现分页加载
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                
+                val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                
+                // 当滚动到倒数第10个item时，加载下一页
+                if (!isLoading && hasMoreData && lastVisibleItem >= totalItemCount - 10) {
+                    loadMoreMedia()
+                }
+            }
+        })
+    }
+    
+    private fun checkPermissionAndLoadPhotos() {
+        if (PermissionHelper.hasMediaPermissions(this)) {
+            loadMedia()
+        } else {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO),
+                PermissionHelper.getRequiredMediaPermissions(),
                 requestPermissionCode
             )
         }
     }
-    private fun loadPhotos(){
-        Toast.makeText(this,"权限已获取，准备加载媒体文件！",Toast.LENGTH_SHORT).show()
-        val photoList=mutableListOf<PhotoItem>()
-
-        // 1. 加载图片
-        val imageProjection=arrayOf(MediaStore.Images.Media._ID)
-        val imageSortOrder="${MediaStore.Images.Media.DATE_TAKEN} DESC"
-        contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            imageProjection,
-            null,
-            null,
-            imageSortOrder
-        )?.use{cursor->
-            val idColumn=cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            while(cursor.moveToNext()){
-                val id =cursor.getLong(idColumn)
-                val contentUri= ContentUris.withAppendedId(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    id
+    
+    private fun loadMedia() {
+        if (isLoading) return
+        
+        isLoading = true
+        progressBar.visibility = View.VISIBLE
+        
+        lifecycleScope.launch {
+            try {
+                val pageParams = MediaStoreHelper.PageParams(
+                    pageSize = pageSize,
+                    offset = currentPage * pageSize
                 )
-                photoList.add(PhotoItem(contentUri))
+                
+                val newItems = mediaStoreHelper.loadAllMedia(pageParams)
+                
+                if (newItems.isEmpty()) {
+                    hasMoreData = false
+                } else {
+                    mediaList.addAll(newItems)
+                    photoAdapter.notifyDataSetChanged()
+                    currentPage++
+                }
+                
+                if (currentPage == 1 && mediaList.isEmpty()) {
+                    Toast.makeText(
+                        this@AlbumActivity,
+                        "未找到任何媒体文件",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(
+                    this@AlbumActivity,
+                    "加载媒体文件失败: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } finally {
+                isLoading = false
+                progressBar.visibility = View.GONE
             }
         }
-
-        // 2. 加载视频
-        val videoProjection=arrayOf(MediaStore.Video.Media._ID)
-        val videoSortOrder="${MediaStore.Video.Media.DATE_TAKEN} DESC"
-        contentResolver.query(
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            videoProjection,
-            null,
-            null,
-            videoSortOrder
-        )?.use{cursor->
-            val idColumn=cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
-            while(cursor.moveToNext()){
-                val id =cursor.getLong(idColumn)
-                val contentUri= ContentUris.withAppendedId(
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    id
-                )
-                photoList.add(PhotoItem(contentUri))
-            }
-        }
-
-        val recyclerView: RecyclerView =findViewById(R.id.rv_album)
-        recyclerView.layoutManager= GridLayoutManager(this, 3)
-        recyclerView.adapter=PhotoAdapter(photoList)
+    }
+    
+    private fun loadMoreMedia() {
+        loadMedia()
     }
 
     override fun onRequestPermissionsResult(
-        requestCode:Int,
-        permissions:Array<out String>,
-        grantResults:IntArray
-    ){
-        super.onRequestPermissionsResult(requestCode,permissions,grantResults)
-        if(requestCode==requestPermissionCode){
-            if(grantResults.isNotEmpty()&&grantResults[0]==PackageManager.PERMISSION_GRANTED){
-                loadPhotos()
-            }else{
-                Toast.makeText(this,"权限被拒绝,无法访问相册", Toast.LENGTH_SHORT).show()
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == requestPermissionCode) {
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                loadMedia()
+            } else {
+                Toast.makeText(this, "权限被拒绝，无法访问相册", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
-
     }
-    data class PhotoItem(val uri: Uri)
-
 }

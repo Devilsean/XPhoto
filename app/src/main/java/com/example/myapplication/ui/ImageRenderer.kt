@@ -49,6 +49,12 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
 
     private var screenshotListener:ScreenshotListener?=null
     private var captureNextFrame=false
+    
+    // 裁剪相关
+    private var cropRect: android.graphics.RectF? = null
+    private var croppedBitmap: Bitmap? = null
+    private var pendingCrop = false
+    private var originalBitmap: Bitmap? = null
 
     // 2. 定义OpenGL程序
     init{
@@ -68,8 +74,90 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     fun setScreenshotListener(listener:ScreenshotListener){
         screenshotListener=listener
     }
+    
     fun takeScreenshot(){
         captureNextFrame=true
+    }
+    
+    /**
+     * 清理资源
+     */
+    fun cleanup() {
+        originalBitmap?.recycle()
+        originalBitmap = null
+        croppedBitmap?.recycle()
+        croppedBitmap = null
+    }
+    
+    /**
+     * 设置裁剪区域（归一化坐标 0-1）
+     */
+    fun setCropRect(rect: android.graphics.RectF) {
+        cropRect = rect
+        pendingCrop = true
+    }
+    
+    /**
+     * 应用裁剪（在 GL 线程中调用）
+     */
+    private fun applyCrop() {
+        cropRect?.let { rect ->
+            try {
+                // 获取当前使用的 bitmap（裁剪后的或原始的）
+                val sourceBitmap = croppedBitmap ?: originalBitmap ?: return
+                
+                // 计算裁剪区域的实际像素坐标
+                val cropX = (rect.left * sourceBitmap.width).toInt()
+                val cropY = (rect.top * sourceBitmap.height).toInt()
+                val cropWidth = ((rect.right - rect.left) * sourceBitmap.width).toInt()
+                val cropHeight = ((rect.bottom - rect.top) * sourceBitmap.height).toInt()
+                
+                // 确保裁剪区域有效
+                val validCropX = cropX.coerceIn(0, sourceBitmap.width - 1)
+                val validCropY = cropY.coerceIn(0, sourceBitmap.height - 1)
+                val validCropWidth = cropWidth.coerceIn(1, sourceBitmap.width - validCropX)
+                val validCropHeight = cropHeight.coerceIn(1, sourceBitmap.height - validCropY)
+                
+                // 裁剪图片
+                val newCroppedBitmap = Bitmap.createBitmap(
+                    sourceBitmap,
+                    validCropX,
+                    validCropY,
+                    validCropWidth,
+                    validCropHeight
+                )
+                
+                // 释放旧的裁剪 bitmap
+                if (croppedBitmap != null && croppedBitmap != sourceBitmap) {
+                    croppedBitmap?.recycle()
+                }
+                croppedBitmap = newCroppedBitmap
+                
+                // 更新图片尺寸
+                imageWidth = croppedBitmap!!.width
+                imageHeight = croppedBitmap!!.height
+                
+                // 重新加载纹理（在 GL 线程中）
+                reloadTexture(croppedBitmap!!)
+                
+                // 重置变换
+                scaleFactor = 1.0f
+                offsetX = 0.0f
+                offsetY = 0.0f
+                
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    
+    /**
+     * 重新加载纹理
+     */
+    private fun reloadTexture(bitmap: Bitmap) {
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
     // 3. 定义顶点着色器和片段着色器
@@ -117,6 +205,11 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         textureId=loadTexture(context,imageUri)
         transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
         grayscaleEnabledHandle=GLES20.glGetUniformLocation(programId,"u_GrayscaleEnabled")
+        
+        // 保存原始 bitmap 用于裁剪
+        originalBitmap = context.contentResolver.openInputStream(imageUri).use {
+            BitmapFactory.decodeStream(it)
+        }
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -153,6 +246,12 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
 
     // 5. 在onDrawFrame中绘制矩形
     override fun onDrawFrame(gl: GL10?) {
+        // 处理待处理的裁剪操作
+        if (pendingCrop) {
+            pendingCrop = false
+            applyCrop()
+        }
+        
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         // 1. 使用我们的OpenGL程序
         GLES20.glUseProgram(programId)
