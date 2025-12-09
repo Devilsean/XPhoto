@@ -16,9 +16,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.bumptech.glide.Glide
 import com.example.myapplication.R
 import com.example.myapplication.ui.AlbumActivity
 import com.example.myapplication.ui.EditorActivityExample
+import com.example.myapplication.ui.VideoPlayerActivity
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -37,12 +39,31 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private val takeVideoLauncher = registerForActivityResult(ActivityResultContracts.CaptureVideo()) { isSuccess ->
+        if (isSuccess) {
+            latestTmpUri?.let { uri ->
+                val intent = Intent(requireActivity(), VideoPlayerActivity::class.java)
+                intent.putExtra("media_uri", uri.toString())
+                startActivity(intent)
+            }
+        }
+    }
+
     private fun getTmpFileUri(): Uri {
         val tmpFile = File.createTempFile("tmp_image_file", ".png", requireContext().cacheDir).apply {
             createNewFile()
             deleteOnExit()
         }
 
+        val authority = "${requireActivity().packageName}.provider"
+        return FileProvider.getUriForFile(requireActivity().applicationContext, authority, tmpFile)
+    }
+
+    private fun getTmpVideoUri(): Uri {
+        val tmpFile = File.createTempFile("tmp_video_file", ".mp4", requireContext().cacheDir).apply {
+            createNewFile()
+            deleteOnExit()
+        }
         val authority = "${requireActivity().packageName}.provider"
         return FileProvider.getUriForFile(requireActivity().applicationContext, authority, tmpFile)
     }
@@ -97,17 +118,38 @@ class HomeFragment : Fragment() {
         val importGalleryButton: CardView = view.findViewById(R.id.btn_import_gallery)
 
         launchCameraButton.setOnClickListener {
-            // TODO: 在实际应用中，调用前应检查相机权限
-            try {
-                // 这是正确的代码
-                getTmpFileUri().let { uri ->
-                    latestTmpUri = uri
-                    takePictureLauncher.launch(uri)
+            val options = arrayOf("拍照", "录像")
+            android.app.AlertDialog.Builder(requireContext())
+                .setTitle("选择操作")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> {
+                            // 拍照
+                            try {
+                                getTmpFileUri().let { uri ->
+                                    latestTmpUri = uri
+                                    takePictureLauncher.launch(uri)
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "无法打开相机", Toast.LENGTH_SHORT).show()
+                                e.printStackTrace()
+                            }
+                        }
+                        1 -> {
+                            // 录像
+                            try {
+                                getTmpVideoUri().let { uri ->
+                                    latestTmpUri = uri
+                                    takeVideoLauncher.launch(uri)
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "无法打开摄像机", Toast.LENGTH_SHORT).show()
+                                e.printStackTrace()
+                            }
+                        }
+                    }
                 }
-            } catch (e: Exception) {
-                Toast.makeText(context, "无法打开相机或创建临时文件", Toast.LENGTH_SHORT).show()
-                e.printStackTrace()
-            }
+                .show()
         }
 
         importGalleryButton.setOnClickListener {
@@ -149,7 +191,10 @@ class HomeFragment : Fragment() {
                             // 加载原始图片作为预览
                             try {
                                 val uri = Uri.parse(draft.originalImageUri)
-                                imageView.setImageURI(uri)
+                                Glide.with(holder.itemView.context)
+                                    .load(uri)
+                                    .placeholder(android.R.color.darker_gray)
+                                    .into(imageView)
                             } catch (e: Exception) {
                                 imageView.setImageResource(android.R.color.darker_gray)
                             }

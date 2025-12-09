@@ -32,30 +32,36 @@ class AlbumActivity : AppCompatActivity() {
     }
     private fun checkPermissionAndLoadPhotos(){
         if(ContextCompat.checkSelfPermission(
-            this,
+            this, 
             Manifest.permission.READ_MEDIA_IMAGES
+        ) == PackageManager.PERMISSION_GRANTED&& ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
+            && ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_MEDIA_VIDEO
         )== PackageManager.PERMISSION_GRANTED
-            ){
+        ){
             loadPhotos()
         }else{
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
+                arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO),
                 requestPermissionCode
             )
         }
     }
     private fun loadPhotos(){
-        Toast.makeText(this,"权限已获取，准备加载照片！",Toast.LENGTH_SHORT).show()
+        Toast.makeText(this,"权限已获取，准备加载媒体文件！",Toast.LENGTH_SHORT).show()
         val photoList=mutableListOf<PhotoItem>()
-        val projection=arrayOf(MediaStore.Images.Media._ID)
-        val sortOrder="${MediaStore.Images.Media.DATE_TAKEN} DESC"
+
+        // 1. 加载图片
+        val imageProjection=arrayOf(MediaStore.Images.Media._ID)
+        val imageSortOrder="${MediaStore.Images.Media.DATE_TAKEN} DESC"
         contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
+            imageProjection,
             null,
             null,
-            sortOrder
+            imageSortOrder
         )?.use{cursor->
             val idColumn=cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             while(cursor.moveToNext()){
@@ -67,10 +73,33 @@ class AlbumActivity : AppCompatActivity() {
                 photoList.add(PhotoItem(contentUri))
             }
         }
+
+        // 2. 加载视频
+        val videoProjection=arrayOf(MediaStore.Video.Media._ID)
+        val videoSortOrder="${MediaStore.Video.Media.DATE_TAKEN} DESC"
+        contentResolver.query(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            videoProjection,
+            null,
+            null,
+            videoSortOrder
+        )?.use{cursor->
+            val idColumn=cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+            while(cursor.moveToNext()){
+                val id =cursor.getLong(idColumn)
+                val contentUri= ContentUris.withAppendedId(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
+                photoList.add(PhotoItem(contentUri))
+            }
+        }
+
         val recyclerView: RecyclerView =findViewById(R.id.rv_album)
         recyclerView.layoutManager= GridLayoutManager(this, 3)
         recyclerView.adapter=PhotoAdapter(photoList)
     }
+
     override fun onRequestPermissionsResult(
         requestCode:Int,
         permissions:Array<out String>,

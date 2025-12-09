@@ -58,4 +58,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.28")
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-ui:1.2.0")
+
+
 }

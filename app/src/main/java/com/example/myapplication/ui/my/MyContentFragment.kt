@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import kotlinx.coroutines.launch
+import com.bumptech.glide.Glide 
 
 class MyContentFragment : Fragment() {
     private var contentType: String? = null
@@ -27,6 +28,8 @@ class MyContentFragment : Fragment() {
     ): View? {
         val recyclerView = RecyclerView(requireContext())
         recyclerView.layoutManager = GridLayoutManager(context, 3)
+        recyclerView.setHasFixedSize(true) 
+        recyclerView.setItemViewCacheSize(20)  
 
         // 获取Repository
         val app = requireActivity().application as com.example.myapplication.MyApplication
@@ -64,7 +67,10 @@ class MyContentFragment : Fragment() {
                                     // 加载已编辑的图片
                                     try {
                                         val uri = android.net.Uri.parse(image.editedImageUri)
-                                        imageView.setImageURI(uri)
+                                        Glide.with(holder.itemView.context)
+                                            .load(uri)
+                                            .placeholder(android.R.color.darker_gray)
+                                            .into(imageView)
                                     } catch (e: Exception) {
                                         imageView.setImageResource(android.R.color.darker_gray)
                                     }
@@ -113,7 +119,10 @@ class MyContentFragment : Fragment() {
                                     // 加载原始图片作为预览
                                     try {
                                         val uri = android.net.Uri.parse(draft.originalImageUri)
-                                        imageView.setImageURI(uri)
+                                        Glide.with(holder.itemView.context)
+                                            .load(uri)
+                                            .placeholder(android.R.color.darker_gray)
+                                            .into(imageView)
                                     } catch (e: Exception) {
                                         imageView.setImageResource(android.R.color.darker_gray)
                                     }
