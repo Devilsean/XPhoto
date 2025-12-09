@@ -121,7 +121,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="重置" />
+            android:text="重置"
+            app:icon="@drawable/ic_refresh"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp" />
 
         <Button
             android:id="@+id/crop_rotate_button"
@@ -129,7 +132,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:text="旋转" />
+            android:text="旋转"
+            app:icon="@drawable/ic_rotate"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp" />
 
         <Button
             android:id="@+id/crop_cancel_button"
@@ -137,13 +143,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="取消" />
+            android:text="取消"
+            app:icon="@drawable/ic_x_vector"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp" />
 
         <Button
             android:id="@+id/crop_confirm_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="确认" />
+            android:text="确认"
+            app:icon="@drawable/ic_check"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp" />
 
     </LinearLayout>
 
@@ -163,20 +175,29 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="裁剪" />
+            android:text="裁剪"
+            app:icon="@drawable/ic_crop_vector"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp" />
 
         <Button
             android:id="@+id/grayscale_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="灰度" />
+            android:text="灰度"
+            app:icon="@drawable/ic_palette_vector"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp" />
 
         <Button
             android:id="@+id/export_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="导出" />
+            android:text="导出"
+            app:icon="@drawable/ic_filter_vector"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp" />
 
     </LinearLayout>
 

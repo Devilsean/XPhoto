@@ -32,4 +32,10 @@
     <color name="dark_onSurface">#E6E1E5</color>
     <color name="dark_surfaceVariant">#49454F</color>
     <color name="dark_onSurfaceVariant">#CAC4D0</color>
+    
+    <!-- Splash Screen Colors -->
+    <color name="splash_border_color">#E0E0E0</color>
+    <color name="splash_bg_pink">#FF6B9D</color>
+    <color name="splash_bg_blue">#4A90E2</color>
+    <color name="splash_text_primary">#212121</color>
 </resources>
