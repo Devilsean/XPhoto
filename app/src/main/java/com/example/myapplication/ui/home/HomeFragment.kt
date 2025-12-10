@@ -19,7 +19,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.example.myapplication.R
 import com.example.myapplication.ui.AlbumActivity
-import com.example.myapplication.ui.EditorActivityExample
+import com.example.myapplication.ui.EditorActivity
 import com.example.myapplication.ui.VideoPlayerActivity
 import kotlinx.coroutines.launch
 import java.io.File
@@ -32,7 +32,7 @@ class HomeFragment : Fragment() {
         if (isSuccess) {
             latestTmpUri?.let { uri ->
                 // 图片拍摄成功，跳转到编辑页面
-                val intent = Intent(requireActivity(), EditorActivityExample::class.java)
+                val intent = Intent(requireActivity(), EditorActivity::class.java)
                 intent.putExtra("image_uri", uri.toString())
                 startActivity(intent)
             }
@@ -201,7 +201,7 @@ class HomeFragment : Fragment() {
                             
                             // 点击进入编辑页面
                             holder.itemView.setOnClickListener {
-                                val intent = Intent(requireActivity(), EditorActivityExample::class.java)
+                                                val intent = Intent(requireActivity(), EditorActivity::class.java)
                                 intent.putExtra("image_uri", draft.originalImageUri)
                                 intent.putExtra("draft_id", draft.id)
                                 startActivity(intent)

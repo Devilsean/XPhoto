@@ -131,7 +131,7 @@ class MyContentFragment : Fragment() {
                                     holder.itemView.setOnClickListener {
                                         val intent = android.content.Intent(
                                             requireActivity(),
-                                            com.example.myapplication.ui.EditorActivityExample::class.java
+                                            com.example.myapplication.ui.EditorActivity::class.java
                                         )
                                         intent.putExtra("image_uri", draft.originalImageUri)
                                         intent.putExtra("draft_id", draft.id)

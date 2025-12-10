@@ -98,6 +98,13 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     }
     
     /**
+     * 获取当前裁剪区域
+     */
+    fun getCropRect(): android.graphics.RectF? {
+        return cropRect
+    }
+    
+    /**
      * 应用裁剪（在 GL 线程中调用）
      */
     private fun applyCrop() {
@@ -202,19 +209,29 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
             GLES20.glAttachShader(it,fragmentShader)
             GLES20.glLinkProgram(it)
         }
-        textureId=loadTexture(context,imageUri)
-        transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
-        grayscaleEnabledHandle=GLES20.glGetUniformLocation(programId,"u_GrayscaleEnabled")
         
-        // 保存原始 bitmap 用于裁剪
-        originalBitmap = context.contentResolver.openInputStream(imageUri).use {
-            BitmapFactory.decodeStream(it)
+        try {
+            textureId=loadTexture(context,imageUri)
+            transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
+            grayscaleEnabledHandle=GLES20.glGetUniformLocation(programId,"u_GrayscaleEnabled")
+            
+            // 保存原始 bitmap 用于裁剪
+            originalBitmap = context.contentResolver.openInputStream(imageUri)?.use {
+                BitmapFactory.decodeStream(it)
+            }
+            
+            if (originalBitmap == null) {
+                throw RuntimeException("无法加载图片")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw RuntimeException("初始化渲染器失败: ${e.message}", e)
         }
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0,0,width,height)
-        if(imageHeight==0||imageHeight==0||width==0||height==0)return
+        if(imageWidth==0||imageHeight==0||width==0||height==0)return
         val screenRatio=width.toFloat()/height.toFloat()
         val imageRatio=imageWidth.toFloat()/imageHeight.toFloat()
         var left=-1.0f
@@ -328,11 +345,21 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         val textureIds= IntArray(1)
         GLES20.glGenTextures(1,textureIds,0)
         if(textureIds[0]==0){
-            return 0
+            throw RuntimeException("无法生成纹理ID")
         }
-        val bitmap=context.contentResolver.openInputStream(uri).use{
-            BitmapFactory.decodeStream(it)
+        
+        val bitmap = try {
+            context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it)
+            } ?: throw RuntimeException("无法打开图片流")
+        } catch (e: Exception) {
+            throw RuntimeException("加载图片失败: ${e.message}", e)
         }
+        
+        if (bitmap == null) {
+            throw RuntimeException("图片解码失败")
+        }
+        
         imageWidth=bitmap.width
         imageHeight=bitmap.height
 

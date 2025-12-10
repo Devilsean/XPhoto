@@ -73,18 +73,34 @@ class PhotoAdapter(private val mediaList: List<MediaStoreHelper.MediaItem>) :
         }
 
         holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val uriString = mediaItem.uri.toString()
+            
+            android.util.Log.d("PhotoAdapter", "点击媒体项: URI=$uriString, isVideo=${mediaItem.isVideo}")
+            
             val intent = if (mediaItem.isVideo) {
                 // 视频文件打开视频播放器
-                Intent(holder.itemView.context, VideoPlayerActivity::class.java).apply {
-                    putExtra("media_uri", mediaItem.uri.toString())
+                Intent(context, VideoPlayerActivity::class.java).apply {
+                    putExtra("media_uri", uriString)
+                    // 授予 URI 读取权限
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
             } else {
                 // 图片文件打开编辑器（带裁剪功能）
-                Intent(holder.itemView.context, EditorActivityExample::class.java).apply {
-                    putExtra("image_uri", mediaItem.uri.toString())
+                Intent(context, EditorActivity::class.java).apply {
+                    putExtra("image_uri", uriString)
+                    // 授予 URI 读取权限
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
             }
-            holder.itemView.context.startActivity(intent)
+            
+            try {
+                context.startActivity(intent)
+                android.util.Log.d("PhotoAdapter", "成功启动Activity")
+            } catch (e: Exception) {
+                android.util.Log.e("PhotoAdapter", "启动Activity失败", e)
+                android.widget.Toast.makeText(context, "打开失败: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

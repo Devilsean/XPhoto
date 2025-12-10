@@ -34,9 +34,10 @@ class MyFragment : Fragment() {
     
         val tabLayout = view.findViewById<TabLayout>(R.id.tab_layout)
         val viewPager = view.findViewById<ViewPager2>(R.id.view_pager)
-        val avatarImageView = view.findViewById<ImageView>(R.id.avatar_image)
-        val nicknameTextView = view.findViewById<TextView>(R.id.nickname_text)
-        val signatureTextView = view.findViewById<TextView>(R.id.signature_text)
+        val avatarImageView = view.findViewById<ImageView>(R.id.avatar_view)
+        val nicknameTextView = view.findViewById<TextView>(R.id.tv_user_name)
+        val signatureTextView = view.findViewById<TextView>(R.id.tv_user_desc)
+        val statsTextView = view.findViewById<TextView>(R.id.tv_user_stats)
         val infoCard = view.findViewById<View>(R.id.info_card)
     
         viewPager.adapter = MyPagerAdapter(this)
@@ -63,6 +64,8 @@ class MyFragment : Fragment() {
                 user?.let {
                     nicknameTextView.text = it.nickname
                     signatureTextView.text = it.signature
+                    // 可以在这里添加统计信息的显示
+                    // statsTextView.text = "作品 ${worksCount} · 草稿 ${draftsCount} · 相册 ${albumsCount}"
                     it.avatarUri?.let { uri ->
                         Glide.with(requireContext())
                             .load(Uri.parse(uri))

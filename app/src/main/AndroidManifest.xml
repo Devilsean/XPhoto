@@ -33,8 +33,10 @@
             android:name=".ui.AlbumActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.EditorActivityExample"
-            android:exported="false" />
+            android:name=".ui.EditorActivity"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
         <activity
             android:name=".ui.VideoPlayerActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
