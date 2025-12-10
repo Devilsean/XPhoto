@@ -1,41 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 基础颜色 -->
+    <!--基础颜色 -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="white_alpha_70">#B3FFFFFF</color>
 
+    <!-- ============清爽主题色系（类似醒图风格） ============ -->
+    
+    <!-- 主色调 -粉红色系 -->
+    <color name="color_primary">#FF5C7C</color>
+    <color name="color_primary_variant">#FF3E5F</color>
+    <color name="color_on_primary">#FFFFFFFF</color>
+    
+    <!-- 次要色 -柔和灰色 -->
+    <color name="color_secondary">#8B97A6</color>
+    <color name="color_secondary_variant">#6B7785</color>
+    <color name="color_on_secondary">#FFFFFFFF</color>
+    
+    <!-- 背景色 - 清爽浅色 -->
+    <color name="color_bg">#F5F7FB</color>
+    <color name="color_bg_light">#FAFBFC</color>
+    <color name="color_card_bg">#FFFFFFFF</color>
+    <color name="color_surface">#FFFFFFFF</color>
+    
+    <!-- 文本颜色 -->
+    <color name="color_text_primary">#222222</color>
+    <color name="color_text_secondary">#666666</color>
+    <color name="color_text_tertiary">#999999</color>
+    <color name="color_text_hint">#CCCCCC</color>
+    
+    <!-- 分割线与边框 -->
+    <color name="color_divider">#11000000</color>
+    <color name="color_border">#E5E8EC</color>
+    <color name="color_border_light">#F0F2F5</color>
+    
+    <!-- 半透明遮罩 -->
+    <color name="color_overlay_light">#80000000</color>
+    <color name="color_overlay_dark">#CC000000</color>
+    <color name="color_overlay_black">#000000</color>
+    
+    <!-- 状态色 -->
+    <color name="color_success">#52C41A</color>
+    <color name="color_warning">#FAAD14</color>
+    <color name="color_error">#F5222D</color>
+    <color name="color_info">#1890FF</color>
+
+    <!-- ============ 夜间模式色系 ============ -->
+    
+    <!-- 夜间主色调 -->
+    <color name="dark_color_primary">#FF7A96</color>
+    <color name="dark_color_primary_variant">#FF5C7C</color>
+    <color name="dark_color_on_primary">#000000</color>
+    
+    <!-- 夜间次要色 -->
+    <color name="dark_color_secondary">#A8B4C0</color>
+    <color name="dark_color_secondary_variant">#8B97A6</color>
+    <color name="dark_color_on_secondary">#000000</color>
+    
+    <!-- 夜间背景色 -->
+    <color name="dark_color_bg">#121212</color>
+    <color name="dark_color_bg_light">#1E1E1E</color>
+    <color name="dark_color_card_bg">#1E1E1E</color>
+    <color name="dark_color_surface">#1E1E1E</color>
+    
+    <!-- 夜间文本颜色 -->
+    <color name="dark_color_text_primary">#EEEEEE</color>
+    <color name="dark_color_text_secondary">#AAAAAA</color>
+    <color name="dark_color_text_tertiary">#888888</color>
+    <color name="dark_color_text_hint">#555555</color>
+    
+    <!-- 夜间分割线与边框 -->
+    <color name="dark_color_divider">#33FFFFFF</color>
+    <color name="dark_color_border">#2A2A2A</color>
+    <color name="dark_color_border_light">#333333</color>
+
+    <!-- ============ 兼容旧的 Material3 颜色（保留以防万一） ============ -->
+    
     <!-- Material 3 Light Theme Colors -->
-    <color name="light_primary">#6200EE</color>
-    <color name="light_onPrimary">@color/white</color>
-    <color name="light_primaryContainer">#EADDFF</color>
-    <color name="light_onPrimaryContainer">#21005D</color>
-    <color name="light_secondary">#625B71</color>
-    <color name="light_onSecondary">@color/white</color>
-    <color name="light_background">#FFFBFE</color>
-    <color name="light_onBackground">#1C1B1F</color>
-    <color name="light_surface">#FFFBFE</color>
-    <color name="light_onSurface">#1C1B1F</color>
-    <color name="light_surfaceVariant">#E7E0EC</color>
-    <color name="light_onSurfaceVariant">#49454F</color>
+    <color name="light_primary">@color/color_primary</color>
+    <color name="light_onPrimary">@color/color_on_primary</color>
+    <color name="light_primaryContainer">#FFE5EC</color>
+    <color name="light_onPrimaryContainer">#4D1825</color>
+    <color name="light_secondary">@color/color_secondary</color>
+    <color name="light_onSecondary">@color/color_on_secondary</color>
+    <color name="light_background">@color/color_bg</color>
+    <color name="light_onBackground">@color/color_text_primary</color>
+    <color name="light_surface">@color/color_surface</color>
+    <color name="light_onSurface">@color/color_text_primary</color>
+    <color name="light_surfaceVariant">@color/color_border_light</color>
+    <color name="light_onSurfaceVariant">@color/color_text_secondary</color>
 
     <!-- Material 3 Dark Theme Colors -->
-    <color name="dark_primary">#BB86FC</color>
-    <color name="dark_onPrimary">@color/black</color>
-    <color name="dark_primaryContainer">#4F378B</color>
-    <color name="dark_onPrimaryContainer">#EADDFF</color>
-    <color name="dark_secondary">#CCC2DC</color>
-    <color name="dark_onSecondary">#332D41</color>
-    <color name="dark_background">#1C1B1F</color>
-    <color name="dark_onBackground">#E6E1E5</color>
-    <color name="dark_surface">#1C1B1F</color>
-    <color name="dark_onSurface">#E6E1E5</color>
-    <color name="dark_surfaceVariant">#49454F</color>
-    <color name="dark_onSurfaceVariant">#CAC4D0</color>
+    <color name="dark_primary">@color/dark_color_primary</color>
+    <color name="dark_onPrimary">@color/dark_color_on_primary</color>
+    <color name="dark_primaryContainer">#6B2838</color>
+    <color name="dark_onPrimaryContainer">#FFE5EC</color>
+    <color name="dark_secondary">@color/dark_color_secondary</color>
+    <color name="dark_onSecondary">@color/dark_color_on_secondary</color>
+    <color name="dark_background">@color/dark_color_bg</color>
+    <color name="dark_onBackground">@color/dark_color_text_primary</color>
+    <color name="dark_surface">@color/dark_color_surface</color>
+    <color name="dark_onSurface">@color/dark_color_text_primary</color>
+    <color name="dark_surfaceVariant">@color/dark_color_border_light</color>
+    <color name="dark_onSurfaceVariant">@color/dark_color_text_secondary</color>
     
     <!-- Splash Screen Colors -->
-    <color name="splash_border_color">#E0E0E0</color>
-    <color name="splash_bg_pink">#FF6B9D</color>
-    <color name="splash_bg_blue">#4A90E2</color>
-    <color name="splash_text_primary">#212121</color>
+    <color name="splash_border_color">@color/color_border</color>
+    <color name="splash_bg_pink">@color/color_primary</color>
+    <color name="splash_bg_blue">#6BA3FF</color>
+    <color name="splash_text_primary">@color/color_text_primary</color>
 </resources>

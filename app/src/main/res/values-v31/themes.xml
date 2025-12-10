@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MyApplication" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
-        <!-- 动态颜色由系统提供，无需定义颜色 -->
+    <!-- Android 12+ 使用我们自定义的主题，而不是动态颜色 -->
+    <style name="Theme.MyApplication" parent="Base.Theme.MyApplication">
+        <!-- 继承基础主题，使用我们定义的清爽配色 -->
     </style>
 </resources>

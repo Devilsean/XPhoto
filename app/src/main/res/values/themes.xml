@@ -1,24 +1,30 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Material 3 Light Theme Attributes -->
-        <item name="colorPrimary">@color/light_primary</item>
-        <item name="colorOnPrimary">@color/light_onPrimary</item>
+        <!-- 清爽主题 - 主色调（粉红色系） -->
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorOnPrimary">@color/color_on_primary</item>
         <item name="colorPrimaryContainer">@color/light_primaryContainer</item>
         <item name="colorOnPrimaryContainer">@color/light_onPrimaryContainer</item>
-        <item name="colorSecondary">@color/light_secondary</item>
-        <item name="colorOnSecondary">@color/light_onSecondary</item>
+        <!-- 次要色-->
+        <item name="colorSecondary">@color/color_secondary</item>
+        <item name="colorOnSecondary">@color/color_on_secondary</item>
 
-        <item name="android:colorBackground">@color/light_background</item>
-        <item name="colorOnBackground">@color/light_onBackground</item>
-        <item name="colorSurface">@color/light_surface</item>
-        <item name="colorOnSurface">@color/light_onSurface</item>
-        <item name="colorSurfaceVariant">@color/light_surfaceVariant</item>
-        <item name="colorOnSurfaceVariant">@color/light_onSurfaceVariant</item>
+        <!-- 背景色 - 清爽浅色 -->
+        <item name="android:colorBackground">@color/color_bg</item>
+        <item name="colorOnBackground">@color/color_text_primary</item>
+        
+        <!-- 表面色 -->
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnSurface">@color/color_text_primary</item>
+        <item name="colorSurfaceVariant">@color/color_border_light</item>
+        <item name="colorOnSurfaceVariant">@color/color_text_secondary</item>
 
-        <!-- Status bar and Navigation bar color -->
-        <item name="android:statusBarColor">@color/light_background</item>
-        <item name="android:navigationBarColor">@color/light_background</item>
+        <!-- 状态栏和导航栏颜色 -->
+        <item name="android:statusBarColor">@color/color_bg</item>
+        <item name="android:navigationBarColor">@color/color_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
