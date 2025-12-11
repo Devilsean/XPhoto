@@ -48,6 +48,10 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     var isGrayscaleEnabled=false
     @Volatile
     var currentFilter: FilterType = FilterType.NONE
+    
+    // 调整参数
+    @Volatile
+    var adjustmentParams: AdjustmentParams = AdjustmentParams()
 
     private var screenshotListener:ScreenshotListener?=null
     private var captureNextFrame=false
@@ -217,25 +221,45 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
 
     // 4. 在onSurfaceCreated中加载OpenGL程序和纹理
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        android.util.Log.d("ImageRenderer", "onSurfaceCreated 开始")
         GLES20.glClearColor(0.0f,0.0f,0.0f,1.0f)
         
         // 为每个滤镜创建着色器程序
         val vertexShader=loadShader(GLES20.GL_VERTEX_SHADER,vertexShaderCode)
+        if (vertexShader == 0) {
+            android.util.Log.e("ImageRenderer", "顶点着色器编译失败")
+        }
+        
         FilterType.values().forEach { filter ->
             val fragmentShader=loadShader(GLES20.GL_FRAGMENT_SHADER, filter.fragmentShader)
+            if (fragmentShader == 0) {
+                android.util.Log.e("ImageRenderer", "片段着色器编译失败: ${filter.name}")
+            }
             val program = GLES20.glCreateProgram().also{
                 GLES20.glAttachShader(it,vertexShader)
                 GLES20.glAttachShader(it,fragmentShader)
                 GLES20.glLinkProgram(it)
+                
+                // 检查链接状态
+                val linkStatus = IntArray(1)
+                GLES20.glGetProgramiv(it, GLES20.GL_LINK_STATUS, linkStatus, 0)
+                if (linkStatus[0] == 0) {
+                    val error = GLES20.glGetProgramInfoLog(it)
+                    android.util.Log.e("ImageRenderer", "程序链接失败 ${filter.name}: $error")
+                    GLES20.glDeleteProgram(it)
+                }
             }
             filterPrograms[filter] = program
+            android.util.Log.d("ImageRenderer", "滤镜程序创建: ${filter.name} -> $program")
         }
         
         // 设置默认程序
         programId = filterPrograms[FilterType.NONE] ?: 0
+        android.util.Log.d("ImageRenderer", "默认程序ID: $programId")
         
         try {
             textureId=loadTexture(context,imageUri)
+            android.util.Log.d("ImageRenderer", "纹理ID: $textureId, 图片尺寸: ${imageWidth}x${imageHeight}")
             transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
             
             // 保存原始 bitmap 用于裁剪
@@ -244,12 +268,15 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
             }
             
             if (originalBitmap == null) {
-                throw RuntimeException("无法加载图片")
+                android.util.Log.e("ImageRenderer", "无法加载原始图片用于裁剪")
+            } else {
+                android.util.Log.d("ImageRenderer", "原始图片加载成功: ${originalBitmap!!.width}x${originalBitmap!!.height}")
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("ImageRenderer", "初始化渲染器失败", e)
             throw RuntimeException("初始化渲染器失败: ${e.message}", e)
         }
+        android.util.Log.d("ImageRenderer", "onSurfaceCreated 完成")
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -315,6 +342,28 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         val textureHandle=GLES20.glGetUniformLocation(programId,"u_Texture")
 
         GLES20.glUniformMatrix4fv(transformMatrixHandle,1,false,transformMatrix,0)
+// 传递调整参数到着色器 (仅对NONE滤镜有效)
+        if (activeFilter == FilterType.NONE) {
+            val brightnessHandle = GLES20.glGetUniformLocation(programId, "u_Brightness")
+            val contrastHandle = GLES20.glGetUniformLocation(programId, "u_Contrast")
+            val saturationHandle = GLES20.glGetUniformLocation(programId, "u_Saturation")
+            val highlightsHandle = GLES20.glGetUniformLocation(programId, "u_Highlights")
+            val shadowsHandle = GLES20.glGetUniformLocation(programId, "u_Shadows")
+            val temperatureHandle = GLES20.glGetUniformLocation(programId, "u_Temperature")
+            val tintHandle = GLES20.glGetUniformLocation(programId, "u_Tint")
+            val clarityHandle = GLES20.glGetUniformLocation(programId, "u_Clarity")
+            val sharpenHandle = GLES20.glGetUniformLocation(programId, "u_Sharpen")
+            
+            GLES20.glUniform1f(brightnessHandle, adjustmentParams.brightness)
+            GLES20.glUniform1f(contrastHandle, adjustmentParams.contrast)
+            GLES20.glUniform1f(saturationHandle, adjustmentParams.saturation)
+            GLES20.glUniform1f(highlightsHandle, adjustmentParams.highlights)
+            GLES20.glUniform1f(shadowsHandle, adjustmentParams.shadows)
+            GLES20.glUniform1f(temperatureHandle, adjustmentParams.temperature)
+            GLES20.glUniform1f(tintHandle, adjustmentParams.tint)
+            GLES20.glUniform1f(clarityHandle, adjustmentParams.clarity)
+            GLES20.glUniform1f(sharpenHandle, adjustmentParams.sharpen)
+        }
 
         // 3. 启用顶点属性数组
         GLES20.glEnableVertexAttribArray(positionHandle)
@@ -365,10 +414,26 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
 
     // 6. 定义辅助函数加载OpenGL程序和纹理
     private fun loadShader(type:Int,shaderCode:String):Int{
-        return GLES20.glCreateShader(type).also{shader->
-            GLES20.glShaderSource(shader,shaderCode)
-            GLES20.glCompileShader(shader)
+        val shader = GLES20.glCreateShader(type)
+        if (shader == 0) {
+            android.util.Log.e("ImageRenderer", "无法创建着色器")
+            return 0
         }
+        
+        GLES20.glShaderSource(shader, shaderCode)
+        GLES20.glCompileShader(shader)
+        
+        // 检查编译状态
+        val compileStatus = IntArray(1)
+        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
+        if (compileStatus[0] == 0) {
+            val error = GLES20.glGetShaderInfoLog(shader)
+            android.util.Log.e("ImageRenderer", "着色器编译失败: $error")
+            GLES20.glDeleteShader(shader)
+            return 0
+        }
+        
+        return shader
     }
 
     // 7. 定义辅助函数加载纹理

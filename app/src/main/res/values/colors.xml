@@ -3,6 +3,7 @@
     <!--基础颜色 -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="white_alpha_30">#4DFFFFFF</color>
     <color name="white_alpha_70">#B3FFFFFF</color>
 
     <!-- ============清爽主题色系（类似醒图风格） ============ -->

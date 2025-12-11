@@ -64,6 +64,13 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private lateinit var filterRecyclerView: RecyclerView
     private lateinit var filterAdapter: FilterAdapter
     private var isFilterMode = false
+    
+    // 调整相关
+    private lateinit var adjustmentPanelCard: MaterialCardView
+    private lateinit var adjustmentRecyclerView: RecyclerView
+    private lateinit var adjustmentAdapter: AdjustmentAdapter
+    private var isAdjustmentMode = false
+    private lateinit var editHistory: EditHistory
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,6 +102,11 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         cropActionCard = findViewById(R.id.crop_action_card)
         aspectRatioScroll = findViewById(R.id.aspect_ratio_scroll)
         filterScroll = findViewById(R.id.filter_scroll)
+        adjustmentPanelCard = findViewById(R.id.adjustment_panel_card)
+        adjustmentRecyclerView = findViewById(R.id.adjustment_recycler_view)
+        
+        // 初始化编辑历史
+        editHistory = EditHistory()
         filterRecyclerView = findViewById(R.id.filter_recycler_view)
         
         // 初始化 OpenGL
@@ -124,6 +136,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         // 手动保存草稿按钮（可选）
         // findViewById<Button>(R.id.save_draft_button).setOnClickListener {
+        setupAdjustmentRecyclerView()
         //     saveDraft()
         // }
         
@@ -141,13 +154,11 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         }
         
         findViewById<ImageButton>(R.id.undo_button).setOnClickListener {
-            // TODO: 实现撤销功能
-            Toast.makeText(this, "撤销功能即将推出", Toast.LENGTH_SHORT).show()
+            performUndo()
         }
         
         findViewById<ImageButton>(R.id.redo_button).setOnClickListener {
-            // TODO: 实现重做功能
-            Toast.makeText(this, "重做功能即将推出", Toast.LENGTH_SHORT).show()
+            performRedo()
         }
         
         // 裁剪按钮（LinearLayout）
@@ -161,6 +172,10 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         }
         
         // 灰度按钮
+        // 调整按钮
+        findViewById<LinearLayout>(R.id.adjust_button).setOnClickListener {
+            enterAdjustmentMode()
+        }
         findViewById<Button>(R.id.grayscale_button).setOnClickListener {
             renderer.isGrayscaleEnabled = !renderer.isGrayscaleEnabled
             glSurfaceView.requestRender()
@@ -264,6 +279,157 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         // 应用滤镜后退出滤镜模式
         exitFilterMode()
         Toast.makeText(this, "已应用${filter.displayName}滤镜", Toast.LENGTH_SHORT).show()
+    }
+    /**
+     * 设置调整RecyclerView
+     */
+    private fun setupAdjustmentRecyclerView() {
+        adjustmentRecyclerView.layoutManager = LinearLayoutManager(this)
+        
+        // 创建所有调整类型列表
+        val adjustmentTypes = AdjustmentType.values().toList()
+        
+        // 创建适配器
+        adjustmentAdapter = AdjustmentAdapter(
+            adjustmentTypes,
+            renderer.adjustmentParams
+        ) { adjustmentType, value ->
+            onAdjustmentChanged(adjustmentType, value)
+        }
+        
+        adjustmentRecyclerView.adapter = adjustmentAdapter
+        
+        // 设置调整面板按钮
+        findViewById<ImageButton>(R.id.adjustment_close_button).setOnClickListener {
+            exitAdjustmentMode()
+        }
+        
+        findViewById<Button>(R.id.adjustment_reset_button).setOnClickListener {
+            resetAllAdjustments()
+        }
+    }
+    
+    /**
+     * 进入调整模式
+     */
+    private fun enterAdjustmentMode() {
+        isAdjustmentMode = true
+        adjustmentPanelCard.visibility = View.VISIBLE
+        editorButtonCard.visibility = View.GONE
+        
+        // 保存当前状态到历史记录
+        saveCurrentStateToHistory()
+    }
+    
+    /**
+     * 退出调整模式
+     */
+    private fun exitAdjustmentMode() {
+        isAdjustmentMode = false
+        adjustmentPanelCard.visibility = View.GONE
+        editorButtonCard.visibility = View.VISIBLE
+    }
+    
+    /**
+     * 调整参数改变时的回调
+     */
+    private fun onAdjustmentChanged(adjustmentType: AdjustmentType, value: Float) {
+        // 更新参数
+        adjustmentType.setValue(renderer.adjustmentParams, value)
+        
+        // 实时渲染
+        glSurfaceView.requestRender()
+        
+        // 自动保存草稿
+        autoSaveDraft()
+    }
+    
+    /**
+     * 重置所有调整
+     */
+    private fun resetAllAdjustments() {
+        renderer.adjustmentParams.reset()
+        adjustmentAdapter.updateValues()
+        glSurfaceView.requestRender()
+        autoSaveDraft()
+        Toast.makeText(this, "已重置所有调整", Toast.LENGTH_SHORT).show()
+    }
+    
+    /**
+     * 保存当前状态到历史记录
+     */
+    private fun saveCurrentStateToHistory() {
+        val currentState = EditState(
+            adjustmentParams = renderer.adjustmentParams.copy(),
+            scaleFactor = renderer.scaleFactor,
+            offsetX = renderer.offsetX,
+            offsetY = renderer.offsetY,
+            cropRect = renderer.getCropRect(),
+            isGrayscaleEnabled = renderer.isGrayscaleEnabled,
+            filterType = renderer.currentFilter
+        )
+        editHistory.addState(currentState)
+        updateUndoRedoButtons()
+    }
+    
+    /**
+     * 更新撤销/恢复按钮状态
+     */
+    private fun updateUndoRedoButtons() {
+        findViewById<ImageButton>(R.id.undo_button).isEnabled = editHistory.canUndo()
+        findViewById<ImageButton>(R.id.redo_button).isEnabled = editHistory.canRedo()
+    }
+    
+    /**
+     * 执行撤销操作
+     */
+    private fun performUndo() {
+        val previousState = editHistory.undo()
+        if (previousState != null) {
+            restoreEditState(previousState)
+            Toast.makeText(this, "已撤销", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    /**
+     * 执行恢复操作
+     */
+    private fun performRedo() {
+        val nextState = editHistory.redo()
+        if (nextState != null) {
+            restoreEditState(nextState)
+            Toast.makeText(this, "已恢复", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    /**
+     * 恢复编辑状态
+     */
+    private fun restoreEditState(state: EditState) {
+        // 恢复调整参数
+        renderer.adjustmentParams = state.adjustmentParams.copy()
+        adjustmentAdapter.updateValues()
+        
+        // 恢复变换参数
+        renderer.scaleFactor = state.scaleFactor
+        renderer.offsetX = state.offsetX
+        renderer.offsetY = state.offsetY
+        
+        // 恢复裁剪
+        state.cropRect?.let { renderer.setCropRect(it) }
+        
+        // 恢复滤镜
+        renderer.isGrayscaleEnabled = state.isGrayscaleEnabled
+        renderer.currentFilter = state.filterType
+        
+        // 重新渲染
+        glSurfaceView.requestRender()
+        
+        // 更新按钮状态
+        updateUndoRedoButtons()
+        
+        // 自动保存
+        autoSaveDraft()
     }
     
     /**
@@ -409,6 +575,16 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 
                 renderer.scaleFactor = draft.scaleFactor
                     renderer.offsetX = draft.offsetX
+                    // 恢复调整参数
+                    renderer.adjustmentParams.brightness = draft.brightness
+                    renderer.adjustmentParams.contrast = draft.contrast
+                    renderer.adjustmentParams.saturation = draft.saturation
+                    renderer.adjustmentParams.highlights = draft.highlights
+                    renderer.adjustmentParams.shadows = draft.shadows
+                    renderer.adjustmentParams.temperature = draft.temperature
+                    renderer.adjustmentParams.tint = draft.tint
+                    renderer.adjustmentParams.clarity = draft.clarity
+                    renderer.adjustmentParams.sharpen = draft.sharpen
                     renderer.offsetY = draft.offsetY
                     
                     // 恢复裁剪状态
@@ -453,6 +629,16 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     cropTop = cropRect?.top,
                     cropRight = cropRect?.right,
                     cropBottom = cropRect?.bottom,
+                    // 保存调整参数
+                    brightness = renderer.adjustmentParams.brightness,
+                    contrast = renderer.adjustmentParams.contrast,
+                    saturation = renderer.adjustmentParams.saturation,
+                    highlights = renderer.adjustmentParams.highlights,
+                    shadows = renderer.adjustmentParams.shadows,
+                    temperature = renderer.adjustmentParams.temperature,
+                    tint = renderer.adjustmentParams.tint,
+                    clarity = renderer.adjustmentParams.clarity,
+                    sharpen = renderer.adjustmentParams.sharpen,
                     modifiedAt = System.currentTimeMillis()
                 )
                 
@@ -466,6 +652,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             } catch (e: Exception) {
                 // 静默失败，不影响用户体验
                 e.printStackTrace()
+                android.util.Log.e("EditorActivity", "自动保存草稿失败", e)
             }
         }
     }
@@ -490,6 +677,16 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     cropTop = cropRect?.top,
                     cropRight = cropRect?.right,
                     cropBottom = cropRect?.bottom,
+                    // 保存调整参数
+                    brightness = renderer.adjustmentParams.brightness,
+                    contrast = renderer.adjustmentParams.contrast,
+                    saturation = renderer.adjustmentParams.saturation,
+                    highlights = renderer.adjustmentParams.highlights,
+                    shadows = renderer.adjustmentParams.shadows,
+                    temperature = renderer.adjustmentParams.temperature,
+                    tint = renderer.adjustmentParams.tint,
+                    clarity = renderer.adjustmentParams.clarity,
+                    sharpen = renderer.adjustmentParams.sharpen,
                     modifiedAt = System.currentTimeMillis()
                 )
                 
