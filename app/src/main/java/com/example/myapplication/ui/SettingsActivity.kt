@@ -12,7 +12,7 @@ import com.google.android.material.appbar.MaterialToolbar
 class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 用你的应用主题
+        // 应用主题
         setTheme(R.style.Theme_MyApplication)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)

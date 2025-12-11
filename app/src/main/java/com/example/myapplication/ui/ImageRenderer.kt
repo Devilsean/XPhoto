@@ -61,6 +61,11 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     private var croppedBitmap: Bitmap? = null
     private var pendingCrop = false
     private var originalBitmap: Bitmap? = null
+    
+    // FBO相关（用于离屏渲染导出图片）
+    private var fboId: Int = 0
+    private var fboTextureId: Int = 0
+    private var fboInitialized = false
 
     // 2. 定义OpenGL程序
     init{
@@ -378,32 +383,13 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4)
         if(captureNextFrame) {
             captureNextFrame = false
-            val viewport = IntArray(4)
-            GLES20.glGetIntegerv(GLES20.GL_VIEWPORT, viewport, 0)
-            val width = viewport[2]
-            val height = viewport[3]
-
-            val buffer = ByteBuffer.allocateDirect(width * height * 4)
-            buffer.order(ByteOrder.nativeOrder())
-            GLES20.glReadPixels(
-                0,
-                0,
-                width,
-                height,
-                GLES20.GL_RGBA,
-                GLES20.GL_UNSIGNED_BYTE,
-                buffer
-            )
-            buffer.rewind()
-
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            bitmap.copyPixelsFromBuffer(buffer)
-
-            val matrix = android.graphics.Matrix()
-            matrix.preScale(1.0f, -1.0f)
-            val flippedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
-            bitmap.recycle()
-            screenshotListener?.onScreenshotTaken(flippedBitmap)
+            // 使用离屏渲染导出纯图片内容（不包含画布背景）
+            val exportedBitmap = renderToFBO()
+            if (exportedBitmap != null) {
+                screenshotListener?.onScreenshotTaken(exportedBitmap)
+            } else {
+                android.util.Log.e("ImageRenderer", "导出图片失败")
+            }
         }
         // 8. 禁用顶点属性数组
         GLES20.glDisableVertexAttribArray(positionHandle)
@@ -500,6 +486,177 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * 使用FBO离屏渲染导出图片
+     * 这样可以只导出图片内容本身，不包含画布背景
+     */
+    private fun renderToFBO(): Bitmap? {
+        try {
+            // 获取当前图片的实际尺寸
+            val exportWidth = imageWidth
+            val exportHeight = imageHeight
+            
+            if (exportWidth <= 0 || exportHeight <= 0) {
+                android.util.Log.e("ImageRenderer", "图片尺寸无效: ${exportWidth}x${exportHeight}")
+                return null
+            }
+            
+            // 创建FBO
+            val fboIds = IntArray(1)
+            GLES20.glGenFramebuffers(1, fboIds, 0)
+            val fbo = fboIds[0]
+            
+            // 创建FBO纹理
+            val textureIds = IntArray(1)
+            GLES20.glGenTextures(1, textureIds, 0)
+            val fboTexture = textureIds[0]
+            
+            // 配置FBO纹理
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTexture)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
+            GLES20.glTexImage2D(
+                GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA,
+                exportWidth, exportHeight, 0,
+                GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null
+            )
+            
+            // 绑定FBO
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fbo)
+            GLES20.glFramebufferTexture2D(
+                GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                GLES20.GL_TEXTURE_2D, fboTexture, 0
+            )
+            
+            // 检查FBO状态
+            val status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER)
+            if (status != GLES20.GL_FRAMEBUFFER_COMPLETE) {
+                android.util.Log.e("ImageRenderer", "FBO不完整: $status")
+                GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+                GLES20.glDeleteFramebuffers(1, fboIds, 0)
+                GLES20.glDeleteTextures(1, textureIds, 0)
+                return null
+            }
+            
+            // 设置视口为图片尺寸
+            GLES20.glViewport(0, 0, exportWidth, exportHeight)
+            
+            // 清除背景（透明）
+            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+            
+            // 选择滤镜程序
+            val activeFilter = if (isGrayscaleEnabled) FilterType.GRAYSCALE else currentFilter
+            val exportProgramId = filterPrograms[activeFilter] ?: filterPrograms[FilterType.NONE] ?: 0
+            GLES20.glUseProgram(exportProgramId)
+            
+            // 创建用于导出的顶点数据（填满整个FBO，不需要变换）
+            val exportVertexData = floatArrayOf(
+                -1.0f, -1.0f,
+                1.0f, -1.0f,
+                -1.0f, 1.0f,
+                1.0f, 1.0f
+            )
+            val exportVertexBuffer = ByteBuffer.allocateDirect(exportVertexData.size * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
+                .put(exportVertexData)
+            exportVertexBuffer.position(0)
+            
+            // 设置单位变换矩阵（不应用缩放和平移）
+            val identityMatrix = FloatArray(16)
+            Matrix.setIdentityM(identityMatrix, 0)
+            
+            val exportTransformHandle = GLES20.glGetUniformLocation(exportProgramId, "u_TransformMatrix")
+            GLES20.glUniformMatrix4fv(exportTransformHandle, 1, false, identityMatrix, 0)
+            
+            // 传递调整参数
+            if (activeFilter == FilterType.NONE) {
+                val brightnessHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Brightness")
+                val contrastHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Contrast")
+                val saturationHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Saturation")
+                val highlightsHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Highlights")
+                val shadowsHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Shadows")
+                val temperatureHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Temperature")
+                val tintHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Tint")
+                val clarityHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Clarity")
+                val sharpenHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Sharpen")
+                
+                GLES20.glUniform1f(brightnessHandle, adjustmentParams.brightness)
+                GLES20.glUniform1f(contrastHandle, adjustmentParams.contrast)
+                GLES20.glUniform1f(saturationHandle, adjustmentParams.saturation)
+                GLES20.glUniform1f(highlightsHandle, adjustmentParams.highlights)
+                GLES20.glUniform1f(shadowsHandle, adjustmentParams.shadows)
+                GLES20.glUniform1f(temperatureHandle, adjustmentParams.temperature)
+                GLES20.glUniform1f(tintHandle, adjustmentParams.tint)
+                GLES20.glUniform1f(clarityHandle, adjustmentParams.clarity)
+                GLES20.glUniform1f(sharpenHandle, adjustmentParams.sharpen)
+            }
+            
+            // 获取着色器变量句柄
+            val positionHandle = GLES20.glGetAttribLocation(exportProgramId, "a_Position")
+            val texCoordHandle = GLES20.glGetAttribLocation(exportProgramId, "a_TexCoord")
+            val textureHandle = GLES20.glGetUniformLocation(exportProgramId, "u_Texture")
+            
+            // 启用顶点属性
+            GLES20.glEnableVertexAttribArray(positionHandle)
+            GLES20.glEnableVertexAttribArray(texCoordHandle)
+            
+            // 传递顶点数据
+            GLES20.glVertexAttribPointer(positionHandle, 2, GLES20.GL_FLOAT, false, 0, exportVertexBuffer)
+            GLES20.glVertexAttribPointer(texCoordHandle, 2, GLES20.GL_FLOAT, false, 0, textureBuffer)
+            
+            // 绑定原始纹理
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
+            GLES20.glUniform1i(textureHandle, 0)
+            
+            // 绘制
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+            
+            // 读取像素
+            val buffer = ByteBuffer.allocateDirect(exportWidth * exportHeight * 4)
+            buffer.order(ByteOrder.nativeOrder())
+            GLES20.glReadPixels(
+                0, 0, exportWidth, exportHeight,
+                GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer
+            )
+            buffer.rewind()
+            
+            // 创建Bitmap
+            val bitmap = Bitmap.createBitmap(exportWidth, exportHeight, Bitmap.Config.ARGB_8888)
+            bitmap.copyPixelsFromBuffer(buffer)
+            
+            // 翻转图片（OpenGL坐标系Y轴与Bitmap相反）
+            val matrix = android.graphics.Matrix()
+            matrix.preScale(1.0f, -1.0f)
+            val flippedBitmap = Bitmap.createBitmap(bitmap, 0, 0, exportWidth, exportHeight, matrix, true)
+            bitmap.recycle()
+            
+            // 禁用顶点属性
+            GLES20.glDisableVertexAttribArray(positionHandle)
+            GLES20.glDisableVertexAttribArray(texCoordHandle)
+            
+            // 恢复默认帧缓冲
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+            
+            // 清理FBO资源
+            GLES20.glDeleteFramebuffers(1, fboIds, 0)
+            GLES20.glDeleteTextures(1, textureIds, 0)
+            
+            android.util.Log.d("ImageRenderer", "FBO导出成功: ${exportWidth}x${exportHeight}")
+            
+            return flippedBitmap
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ImageRenderer", "FBO渲染失败", e)
+            e.printStackTrace()
+            return null
         }
     }
 }

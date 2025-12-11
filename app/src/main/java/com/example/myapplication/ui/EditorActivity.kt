@@ -1,12 +1,11 @@
 package com.example.myapplication.ui
 
 import android.animation.ValueAnimator
-import android.content.ContentValues
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.opengl.GLSurfaceView
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -33,7 +32,6 @@ import com.example.myapplication.ui.widget.CropOverlayView
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
-import java.io.OutputStream
 import kotlin.math.abs
 
 
@@ -59,13 +57,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private var lastFocusY: Float = 0f
     
     private var exitAfterSave = false
-    
-    // 保存/导出模式
-    private enum class SaveMode {
-        SAVE_TO_WORKS,      // 保存到作品（应用内部存储）
-        EXPORT_TO_GALLERY   // 导出到系统相册
-    }
-    private var currentSaveMode = SaveMode.SAVE_TO_WORKS
     
     // 当前草稿ID，如果是新建则为null
     private var currentDraftId: Long? = null
@@ -207,16 +198,9 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             autoSaveDraft()
         }
         
-        // 保存按钮 - 保存到作品中
+        // 保存按钮 - 保存为作品（生成最终图片并跳转到作品查看界面）
+        // 草稿会自动保存，点击保存按钮时将草稿转化为作品
         findViewById<LinearLayout>(R.id.save_button).setOnClickListener {
-            currentSaveMode = SaveMode.SAVE_TO_WORKS
-            renderer.takeScreenshot()
-            glSurfaceView.requestRender()
-        }
-        
-        // 导出按钮 - 导出到系统相册
-        findViewById<LinearLayout>(R.id.export_button).setOnClickListener {
-            currentSaveMode = SaveMode.EXPORT_TO_GALLERY
             renderer.takeScreenshot()
             glSurfaceView.requestRender()
         }
@@ -734,14 +718,14 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private fun showExitConfirmationDialog() {
         AlertDialog.Builder(this)
             .setTitle("退出编辑")
-            .setMessage("是否要保存当前更改到作品中？")
-            .setPositiveButton("保存") { _, _ ->
+            .setMessage("当前编辑状态已自动保存为草稿。\n是否要保存为作品？")
+            .setPositiveButton("保存作品") { _, _ ->
                 exitAfterSave = true
-                currentSaveMode = SaveMode.SAVE_TO_WORKS
                 renderer.takeScreenshot()
                 glSurfaceView.requestRender()
             }
-            .setNegativeButton("不保存") { _, _ ->
+            .setNegativeButton("仅保留草稿") { _, _ ->
+                // 草稿已自动保存，直接退出
                 finish()
             }
             .setNeutralButton("取消", null)
@@ -1013,14 +997,21 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     }
 
     override fun onScreenshotTaken(bitmap: Bitmap) {
-        when (currentSaveMode) {
-            SaveMode.SAVE_TO_WORKS -> saveToWorks(bitmap)
-            SaveMode.EXPORT_TO_GALLERY -> exportToGallery(bitmap)
-        }
+        saveToWorks(bitmap)
     }
     
     /**
-     * 保存到作品（应用内部存储）
+     * 保存为作品（保存最终编辑后的图片到应用内部存储，并跳转到作品查看界面）
+     *
+     * 流程说明：
+     * 1. 草稿在编辑过程中自动保存编辑状态
+     * 2. 点击"保存"按钮时，将当前编辑结果渲染为最终图片
+     * 3. 保存图片到应用内部存储，创建作品记录
+     * 4. 删除对应的草稿（草稿已转化为作品）
+     * 5. 跳转到作品查看界面（ImageViewerActivity）
+     *
+     * 作品可以被收藏（收藏只是作品的一个标识，便于查找）
+     * 作品可以在查看界面导出到系统相册
      */
     private fun saveToWorks(bitmap: Bitmap) {
         lifecycleScope.launch {
@@ -1038,18 +1029,37 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 }
                 
                 // 保存记录到数据库
+                // 作品默认不收藏，用户可以在查看时手动收藏
                 val editedImage = EditedImage(
                     originalImageUri = originalImageUri ?: "",
                     editedImageUri = file.absolutePath,
-                    isExported = false,
+                    isExported = false, // 未导出到系统相册
+                    isFavorite = false, // 默认不收藏
                     createdAt = System.currentTimeMillis(),
                     modifiedAt = System.currentTimeMillis()
                 )
-                editedImageRepository.saveEditedImage(editedImage)
+                val imageId = editedImageRepository.saveEditedImage(editedImage)
+                
+                // 保存作品后，删除对应的草稿（草稿已转化为作品）
+                currentDraftId?.let { draftId ->
+                    draftRepository.deleteDraft(draftId)
+                    currentDraftId = null
+                }
                 
                 runOnUiThread {
-                    Toast.makeText(this@EditorActivity, "已保存到作品", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditorActivity, "已保存为作品", Toast.LENGTH_SHORT).show()
+                    
                     if (exitAfterSave) {
+                        // 如果是退出时保存，直接结束
+                        finish()
+                    } else {
+                        // 跳转到作品查看界面
+                        val intent = Intent(this@EditorActivity, ImageViewerActivity::class.java)
+                        intent.putExtra("image_path", file.absolutePath)
+                        intent.putExtra("image_id", imageId)
+                        intent.putExtra("is_favorite", false)
+                        intent.putExtra("image_type", "work")
+                        startActivity(intent)
                         finish()
                     }
                 }
@@ -1061,90 +1071,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                         finish()
                     }
                 }
-            }
-        }
-    }
-    
-    /**
-     * 导出到系统相册
-     */
-    private fun exportToGallery(bitmap: Bitmap) {
-        val fileName = "edited_image_${System.currentTimeMillis()}.png"
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/MyApplication")
-        }
-        val resolver = contentResolver
-        var stream: OutputStream? = null
-        var uri: Uri? = null
-        
-        try {
-            uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-            if (uri != null) {
-                stream = resolver.openOutputStream(uri)
-                if (stream != null) {
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                    // 保存编辑记录到数据库（标记为已导出）
-                    saveExportedImageRecord(uri.toString())
-                    runOnUiThread {
-                        Toast.makeText(this, "已导出到系统相册", Toast.LENGTH_SHORT).show()
-                        if (exitAfterSave) {
-                            finish()
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            if (uri != null) {
-                resolver.delete(uri, null, null)
-            }
-            runOnUiThread {
-                Toast.makeText(this, "导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
-                if (exitAfterSave) {
-                    finish()
-                }
-            }
-        } finally {
-            stream?.close()
-        }
-    }
-
-    /**
-     * 保存导出记录到数据库
-     */
-    private fun saveExportedImageRecord(exportedUri: String) {
-        if (originalImageUri == null) return
-        
-        lifecycleScope.launch {
-            try {
-                // 先保存到作品目录
-                val fileName = "work_${System.currentTimeMillis()}.png"
-                val worksDir = File(filesDir, "works")
-                if (!worksDir.exists()) {
-                    worksDir.mkdirs()
-                }
-                val localFile = File(worksDir, fileName)
-                
-                // 从导出的URI复制一份到本地
-                contentResolver.openInputStream(Uri.parse(exportedUri))?.use { input ->
-                    FileOutputStream(localFile).use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                
-                val editedImage = EditedImage(
-                    originalImageUri = originalImageUri!!,
-                    editedImageUri = localFile.absolutePath,
-                    exportedUri = exportedUri,
-                    isExported = true,
-                    createdAt = System.currentTimeMillis(),
-                    modifiedAt = System.currentTimeMillis()
-                )
-                editedImageRepository.saveEditedImage(editedImage)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                android.util.Log.e("EditorActivity", "保存导出记录失败", e)
             }
         }
     }

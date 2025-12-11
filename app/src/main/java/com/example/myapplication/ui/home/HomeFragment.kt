@@ -215,15 +215,16 @@ class HomeFragment : Fragment() {
                                     val itemView = LayoutInflater.from(parent.context)
                                         .inflate(R.layout.item_draft, parent, false)
 
-                                    // 设置固定宽度和4:3比例的高度(横向滚动)
-                                    val itemWidth = 120  // dp
+                                    // 设置固定宽度，高度由布局的 9:16 比例自动计算
+                                    val itemWidth = 90  // dp (横向滚动时的固定宽度)
+                                    val itemMargin = 4  // dp (项目之间的外边距)
                                     val density = parent.context.resources.displayMetrics.density
                                     val widthPx = (itemWidth * density).toInt()
-                                    val heightPx = (widthPx * 4 / 3f).toInt()
+                                    val marginPx = (itemMargin * density).toInt()
 
-                                    itemView.layoutParams.width = widthPx
-                                    val imageView = itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
-                                    imageView?.layoutParams?.height = heightPx
+                                    val layoutParams = RecyclerView.LayoutParams(widthPx, RecyclerView.LayoutParams.WRAP_CONTENT)
+                                    layoutParams.setMargins(marginPx, marginPx, marginPx, marginPx)
+                                    itemView.layoutParams = layoutParams
 
                                     return object : RecyclerView.ViewHolder(itemView) {}
                                 }

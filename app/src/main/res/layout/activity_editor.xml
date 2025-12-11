@@ -521,7 +521,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp" />
 
-            <!-- 保存按钮 - 保存到作品中 -->
+            <!-- 保存按钮 - 保存为作品（草稿自动保存，点击此按钮将草稿转化为作品） -->
             <LinearLayout
                 android:id="@+id/save_button"
                 android:layout_width="wrap_content"
@@ -534,10 +534,10 @@
                 android:padding="8dp">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:src="@drawable/ic_save"
-                    app:tint="@color/white"
+                    app:tint="#FF8FA8"
                     android:contentDescription="保存" />
 
                 <TextView
@@ -545,37 +545,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="保存"
-                    android:textColor="@color/white"
-                    android:textSize="10sp" />
-            </LinearLayout>
-
-            <!-- 导出按钮 - 导出到系统相册 -->
-            <LinearLayout
-                android:id="@+id/export_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                android:layout_marginStart="4dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_download"
-                    app:tint="#FF8FA8"
-                    android:contentDescription="导出" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="导出"
                     android:textColor="#FF8FA8"
-                    android:textSize="10sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
 
 

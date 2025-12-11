@@ -62,17 +62,9 @@ class MyContentFragment : Fragment() {
                                     parent: ViewGroup,
                                     viewType: Int
                                 ): RecyclerView.ViewHolder {
+                                    // 布局文件已使用 constraintDimensionRatio="9:16" 实现比例
                                     val itemView = LayoutInflater.from(parent.context)
                                         .inflate(R.layout.item_draft, parent, false)
-                                    
-                                    // 设置固定4:3比例的高度
-                                    val displayMetrics = parent.context.resources.displayMetrics
-                                    val screenWidth = displayMetrics.widthPixels
-                                    val itemWidth = screenWidth / 3
-                                    val itemHeight = (itemWidth * 4 / 3f).toInt()
-
-                                    val imageView = itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
-                                    imageView.layoutParams.height = itemHeight
                                     
                                     return object : RecyclerView.ViewHolder(itemView) {}
                                 }
@@ -105,6 +97,16 @@ class MyContentFragment : Fragment() {
                                         intent.putExtra("image_uri", draft.originalImageUri)
                                         intent.putExtra("draft_id", draft.id)
                                         startActivity(intent)
+                                    }
+                                    
+                                    // 长按查看详情
+                                    holder.itemView.setOnLongClickListener {
+                                        val intent = Intent(requireActivity(), ImageViewerActivity::class.java)
+                                        intent.putExtra("image_path", draft.originalImageUri)
+                                        intent.putExtra("draft_id", draft.id)
+                                        intent.putExtra("image_type", "draft")
+                                        startActivity(intent)
+                                        true
                                     }
                                 }
 
@@ -165,17 +167,9 @@ class MyContentFragment : Fragment() {
                 parent: ViewGroup,
                 viewType: Int
             ): RecyclerView.ViewHolder {
+                // 布局文件已使用 constraintDimensionRatio="9:16" 实现比例
                 val itemView = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_draft, parent, false)
-                
-                // 设置固定4:3比例的高度
-                val displayMetrics = parent.context.resources.displayMetrics
-                val screenWidth = displayMetrics.widthPixels
-                val itemWidth = screenWidth / 3
-                val itemHeight = (itemWidth * 4 / 3f).toInt()
-                
-                val imageView = itemView.findViewById<ImageView>(R.id.iv_draft_preview)
-                imageView.layoutParams.height = itemHeight
                 
                 return object : RecyclerView.ViewHolder(itemView) {}
             }
@@ -223,6 +217,8 @@ class MyContentFragment : Fragment() {
                     intent.putExtra("image_path", image.editedImageUri)
                     intent.putExtra("image_id", image.id)
                     intent.putExtra("is_favorite", image.isFavorite)
+                    // 根据是否收藏设置类型
+                    intent.putExtra("image_type", if (image.isFavorite) "favorite" else "work")
                     startActivity(intent)
                 }
             }

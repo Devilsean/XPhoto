@@ -3,33 +3,54 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="4dp"
+    android:layout_margin="3dp"
+    app:cardCornerRadius="6dp"
     app:cardElevation="2dp"
-    app:cardBackgroundColor="@android:color/transparent">
+    app:cardBackgroundColor="#1A1A1A">
 
-    <FrameLayout
+    <!-- 9:16 比例容器，使用 constraintDimensionRatio 实现 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fl_image_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="#1A1A1A">
 
+        <!-- 9:16 比例占位视图 -->
+        <View
+            android:id="@+id/ratio_spacer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="9:16"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 图片使用 fitCenter 实现 Letterboxing 效果 -->
         <ImageView
             android:id="@+id/iv_draft_preview"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:scaleType="centerCrop"
-            android:background="@android:color/darker_gray" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:background="#1A1A1A"
+            app:layout_constraintTop_toTopOf="@id/ratio_spacer"
+            app:layout_constraintBottom_toBottomOf="@id/ratio_spacer"
+            app:layout_constraintStart_toStartOf="@id/ratio_spacer"
+            app:layout_constraintEnd_toEndOf="@id/ratio_spacer" />
 
         <!-- 收藏标识 -->
         <ImageView
             android:id="@+id/iv_favorite_badge"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:layout_gravity="top|end"
             android:layout_margin="6dp"
             android:src="@drawable/ic_heart_full"
             app:tint="#FF4081"
             android:visibility="gone"
-            android:contentDescription="已收藏" />
+            android:contentDescription="已收藏"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.cardview.widget.CardView>
