@@ -8,8 +8,8 @@
     <!-- ============清爽主题色系（类似醒图风格） ============ -->
     
     <!-- 主色调 -粉红色系 -->
-    <color name="color_primary">#FF5C7C</color>
-    <color name="color_primary_variant">#FF3E5F</color>
+    <color name="color_primary">#FF7A96</color>
+    <color name="color_primary_variant">#FF6680</color>
     <color name="color_on_primary">#FFFFFFFF</color>
     
     <!-- 次要色 -柔和灰色 -->
@@ -48,8 +48,8 @@
     <!-- ============ 夜间模式色系 ============ -->
     
     <!-- 夜间主色调 -->
-    <color name="dark_color_primary">#FF7A96</color>
-    <color name="dark_color_primary_variant">#FF5C7C</color>
+    <color name="dark_color_primary">#FF8FA8</color>
+    <color name="dark_color_primary_variant">#FF7A96</color>
     <color name="dark_color_on_primary">#000000</color>
     
     <!-- 夜间次要色 -->
@@ -79,7 +79,7 @@
     <!-- Material 3 Light Theme Colors -->
     <color name="light_primary">@color/color_primary</color>
     <color name="light_onPrimary">@color/color_on_primary</color>
-    <color name="light_primaryContainer">#FFE5EC</color>
+    <color name="light_primaryContainer">#FFEAF0</color>
     <color name="light_onPrimaryContainer">#4D1825</color>
     <color name="light_secondary">@color/color_secondary</color>
     <color name="light_onSecondary">@color/color_on_secondary</color>
@@ -106,7 +106,7 @@
     
     <!-- Splash Screen Colors -->
     <color name="splash_border_color">@color/color_border</color>
-    <color name="splash_bg_pink">@color/color_primary</color>
-    <color name="splash_bg_blue">#6BA3FF</color>
+    <color name="splash_bg_pink">#FF8FA8</color>
+    <color name="splash_bg_blue">#A8C9FF</color>
     <color name="splash_text_primary">@color/color_text_primary</color>
 </resources>

@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Android 12+ 使用我们自定义的主题，而不是动态颜色 -->
-    <style name="Theme.MyApplication" parent="Base.Theme.MyApplication">
-        <!-- 继承基础主题，使用我们定义的清爽配色 -->
+
+    <!-- Android 12+ 正常应用主题 -->
+    <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
+
+    <!-- Android 12+ 启动页主题（必须补！） -->
+    <style name="Theme.MyApplication.Splash" parent="Base.Theme.MyApplication">
+        <item name="android:windowBackground">@drawable/splash_gradient_bg</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+
     </style>
+
 </resources>

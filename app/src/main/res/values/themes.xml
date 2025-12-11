@@ -6,14 +6,15 @@
         <item name="colorOnPrimary">@color/color_on_primary</item>
         <item name="colorPrimaryContainer">@color/light_primaryContainer</item>
         <item name="colorOnPrimaryContainer">@color/light_onPrimaryContainer</item>
-        <!-- 次要色-->
+
+        <!-- 次要色 -->
         <item name="colorSecondary">@color/color_secondary</item>
         <item name="colorOnSecondary">@color/color_on_secondary</item>
 
         <!-- 背景色 - 清爽浅色 -->
         <item name="android:colorBackground">@color/color_bg</item>
         <item name="colorOnBackground">@color/color_text_primary</item>
-        
+
         <!-- 表面色 -->
         <item name="colorSurface">@color/color_surface</item>
         <item name="colorOnSurface">@color/color_text_primary</item>
@@ -27,5 +28,15 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
     </style>
 
+    <!-- 正常运行时的主题 -->
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
+
+    <!-- 启动页专用主题 -->
+    <style name="Theme.MyApplication.Splash" parent="Base.Theme.MyApplication">
+        <!-- 启动页背景直接用画好的渐变 -->
+        <item name="android:windowBackground">@drawable/splash_gradient_bg</item>
+        <!-- 去掉标题栏，全屏显示 -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>
