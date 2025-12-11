@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/color_bg"
+    android:background="?attr/android:colorBackground"
     android:fillViewport="true"
     tools:context=".ui.home.HomeFragment">
 
@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="200dp"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/color_card_bg"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
             app:cardUseCompatPadding="true"
@@ -42,7 +42,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/color_card_bg"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
             app:cardUseCompatPadding="true"
@@ -61,7 +61,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="快速开始"
-                    android:textColor="@color/color_text_primary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
@@ -83,7 +83,7 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        app:cardBackgroundColor="@color/color_bg_light"
+                        app:cardBackgroundColor="?attr/colorSurfaceVariant"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp">
 
@@ -92,20 +92,18 @@
                             android:layout_height="match_parent"
                             android:gravity="center"
                             android:orientation="vertical">
-
                             <ImageView
                                 android:layout_width="48dp"
                                 android:layout_height="48dp"
                                 android:src="@android:drawable/ic_menu_camera"
-                                android:tint="@color/color_primary"
+                                app:tint="?attr/colorPrimary"
                                 android:contentDescription="打开相机" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:text="打开相机"
-                                android:textColor="@color/color_text_primary"
+                                android:textColor="?attr/colorOnSurface"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -121,7 +119,7 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        app:cardBackgroundColor="@color/color_bg_light"
+                        app:cardBackgroundColor="?attr/colorSurfaceVariant"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp">
 
@@ -135,7 +133,7 @@
                                 android:layout_width="48dp"
                                 android:layout_height="48dp"
                                 android:src="@android:drawable/ic_menu_gallery"
-                                android:tint="@color/color_primary"
+                                app:tint="?attr/colorPrimary"
                                 android:contentDescription="从相册导入" />
 
                             <TextView
@@ -143,7 +141,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:text="从相册导入"
-                                android:textColor="@color/color_text_primary"
+                                android:textColor="?attr/colorOnSurface"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -159,7 +157,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/color_card_bg"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
             app:cardUseCompatPadding="true"
@@ -179,7 +177,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="常用功能"
-                    android:textColor="@color/color_text_primary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
@@ -203,7 +201,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/color_card_bg"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
             app:cardUseCompatPadding="true"
@@ -230,7 +228,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="最近编辑"
-                        android:textColor="@color/color_text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -239,20 +237,20 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="查看全部 >"
-                        android:textColor="@color/color_secondary"
+                        android:textColor="?attr/colorSecondary"
                         android:textSize="14sp"
                         android:clickable="true"
                         android:focusable="true"
                         android:padding="4dp" />
                 </LinearLayout>
 
-                <!-- 草稿横向滚动列表 -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/drafts_recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="140dp"
                     android:clipToPadding="false"
                     android:orientation="horizontal"
+                    android:importantForAccessibility="no"
                     tools:itemCount="5"
                     tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:listitem="@layout/item_draft" />
