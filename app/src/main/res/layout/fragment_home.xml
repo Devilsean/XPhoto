@@ -28,14 +28,28 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <!-- Banner 内容：轮播图 -->
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/carousel_view_pager"
+            <!-- Banner 内容：使用 FrameLayout 叠加轮播图和渐变遮罩 -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:requiresFadingEdge="horizontal|vertical"
-                android:fadingEdgeLength="50dp" />
+                android:layout_height="match_parent">
+
+                <!-- 轮播图 -->
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/carousel_view_pager"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false" />
+
+                <!-- 四周渐变遮罩层 -->
+                <View
+                    android:id="@+id/carousel_gradient_overlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/carousel_edge_gradient"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </FrameLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
