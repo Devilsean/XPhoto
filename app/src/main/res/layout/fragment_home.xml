@@ -71,7 +71,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
 
                 <!-- 区块标题 -->
                 <TextView
@@ -113,7 +116,7 @@
                             <ImageView
                                 android:layout_width="48dp"
                                 android:layout_height="48dp"
-                                android:src="@android:drawable/ic_menu_camera"
+                                android:src="@drawable/ic_camera"
                                 app:tint="?attr/colorPrimary"
                                 android:contentDescription="打开相机" />
                             <TextView
@@ -151,7 +154,7 @@
                             <ImageView
                                 android:layout_width="48dp"
                                 android:layout_height="48dp"
-                                android:src="@android:drawable/ic_menu_gallery"
+                                android:src="@drawable/ic_album"
                                 app:tint="?attr/colorPrimary"
                                 android:contentDescription="从相册导入" />
 
@@ -188,7 +191,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
 
                 <!-- 区块标题 -->
                 <TextView
@@ -232,7 +238,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
 
                 <!-- 区块标题 -->
                 <LinearLayout

@@ -40,6 +40,17 @@
 
     </PreferenceCategory>
 
+    <!-- 3. 数据管理 -->
+    <PreferenceCategory
+        android:title="数据管理">
+
+        <Preference
+            android:key="clear_all_data"
+            android:title="清除所有数据"
+            android:summary="清除草稿、作品、个人信息和设置偏好" />
+
+    </PreferenceCategory>
+
     <!-- 3. 编辑偏好 -->
     <PreferenceCategory
         android:title="编辑偏好">

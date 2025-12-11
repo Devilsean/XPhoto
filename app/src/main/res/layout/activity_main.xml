@@ -5,24 +5,28 @@
     android:background="?attr/android:colorBackground"
     android:layout_height="match_parent">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/nav_host_fragment"
-        android:name="androidx.navigation.fragment.NavHostFragment"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottom_nav_view"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/main_navigation" />
+        android:layout_above="@+id/tab_layout" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_nav_view"
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_alignParentBottom="true"
         android:background="@android:color/transparent"
-        app:itemIconTint="@color/bottom_nav_item_color"
-        app:itemTextColor="@color/bottom_nav_item_color"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_menu" />
+        android:paddingBottom="4dp"
+        app:tabGravity="fill"
+        app:tabMode="fixed"
+        app:tabIndicator="@drawable/tab_indicator"
+        app:tabIndicatorColor="#FFFFB6C1"
+        app:tabIndicatorGravity="bottom"
+        app:tabIndicatorHeight="3dp"
+        app:tabTextColor="@color/tab_text_color"
+        app:tabSelectedTextColor="#FF000000"
+        app:tabRippleColor="@android:color/transparent"
+        app:tabIconTint="@null" />
 
 </RelativeLayout>

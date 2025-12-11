@@ -9,12 +9,19 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
+import com.example.myapplication.MyApplication
 import com.example.myapplication.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -145,6 +152,134 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 Toast.makeText(context, "未找到可以打开此链接的浏览器应用", Toast.LENGTH_SHORT).show()
             }
             true
+        }
+
+        // 8. 清除所有数据
+        findPreference<Preference>("clear_all_data")?.setOnPreferenceClickListener {
+            context?.let { ctx ->
+                // 第一次确认弹窗
+                MaterialAlertDialogBuilder(ctx)
+                    .setTitle("清除所有数据")
+                    .setMessage("此操作将清除以下所有数据：\n\n• 所有草稿\n• 所有作品\n• 个人信息\n• 设置偏好\n\n此操作不可撤销，确定要继续吗？")
+                    .setNegativeButton("取消", null)
+                    .setPositiveButton("继续") { _, _ ->
+                        // 第二次确认弹窗
+                        MaterialAlertDialogBuilder(ctx)
+                            .setTitle("再次确认")
+                            .setMessage("您确定要清除所有数据吗？\n\n这将删除您的所有草稿、作品、个人信息和设置偏好，且无法恢复！")
+                            .setNegativeButton("取消", null)
+                            .setPositiveButton("确定清除") { _, _ ->
+                                clearAllData()
+                            }
+                            .show()
+                    }
+                    .show()
+            }
+            true
+        }
+    }
+
+    /**
+     * 清除所有数据
+     * 包括：草稿、作品、个人信息、设置偏好
+     */
+    private fun clearAllData() {
+        val ctx = context ?: return
+        
+        lifecycleScope.launch {
+            try {
+                val app = requireActivity().application as MyApplication
+                
+                withContext(Dispatchers.IO) {
+                    // 1. 清除草稿数据
+                    app.draftRepository.deleteAllDrafts()
+                    
+                    // 2. 清除作品数据
+                    app.editedImageRepository.deleteAllEditedImages()
+                    
+                    // 3. 清除相册数据
+                    app.albumRepository.deleteAllAlbums()
+                    
+                    // 4. 清除用户数据
+                    app.userRepository.deleteAllUsers()
+                    
+                    // 5. 清除设置偏好
+                    PreferenceManager.getDefaultSharedPreferences(ctx).edit().clear().apply()
+                    
+                    // 6. 清除应用内部存储的文件（草稿和作品图片）
+                    clearAppInternalFiles(ctx)
+                    
+                    // 7. 清除缓存
+                    ctx.cacheDir?.deleteRecursively()
+                }
+                
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(ctx, "所有数据已清除", Toast.LENGTH_SHORT).show()
+                    
+                    // 提示用户重启应用
+                    MaterialAlertDialogBuilder(ctx)
+                        .setTitle("数据已清除")
+                        .setMessage("所有数据已成功清除。建议重启应用以确保所有更改生效。")
+                        .setPositiveButton("立即重启") { _, _ ->
+                            restartApp()
+                        }
+                        .setNegativeButton("稍后", null)
+                        .setCancelable(false)
+                        .show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(ctx, "清除数据失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    /**
+     * 清除应用内部存储的文件
+     */
+    private fun clearAppInternalFiles(ctx: android.content.Context) {
+        try {
+            // 清除草稿目录
+            val draftsDir = File(ctx.filesDir, "drafts")
+            if (draftsDir.exists()) {
+                draftsDir.deleteRecursively()
+            }
+            
+            // 清除作品目录
+            val worksDir = File(ctx.filesDir, "works")
+            if (worksDir.exists()) {
+                worksDir.deleteRecursively()
+            }
+            
+            // 清除编辑图片目录
+            val editedDir = File(ctx.filesDir, "edited_images")
+            if (editedDir.exists()) {
+                editedDir.deleteRecursively()
+            }
+            
+            // 清除其他可能的图片目录
+            val imagesDir = File(ctx.filesDir, "images")
+            if (imagesDir.exists()) {
+                imagesDir.deleteRecursively()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsFragment", "清除应用文件失败", e)
+        }
+    }
+
+    /**
+     * 重启应用
+     */
+    private fun restartApp() {
+        context?.let { ctx ->
+            val intent = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+            val componentName = intent?.component
+            if (componentName != null) {
+                val mainIntent = Intent.makeRestartActivityTask(componentName)
+                ctx.startActivity(mainIntent)
+            }
+            Runtime.getRuntime().exit(0)
         }
     }
 }

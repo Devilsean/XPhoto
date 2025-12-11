@@ -37,7 +37,6 @@ class MyFragment : Fragment() {
         val avatarImageView = view.findViewById<ImageView>(R.id.avatar_view)
         val nicknameTextView = view.findViewById<TextView>(R.id.tv_user_name)
         val signatureTextView = view.findViewById<TextView>(R.id.tv_user_desc)
-        val statsTextView = view.findViewById<TextView>(R.id.tv_user_stats)
         val infoCard = view.findViewById<View>(R.id.info_card)
         val settingsButton = view.findViewById<View>(R.id.settings_button)
 
@@ -67,8 +66,6 @@ class MyFragment : Fragment() {
                 user?.let {
                     nicknameTextView.text = it.nickname
                     signatureTextView.text = it.signature
-                    // TODO: 后面可以在这里填充统计信息
-                    // statsTextView.text = "作品 ${worksCount} · 草稿 ${draftsCount} · 相册 ${albumsCount}"
 
                     it.avatarUri?.let { uri ->
                         Glide.with(requireContext())

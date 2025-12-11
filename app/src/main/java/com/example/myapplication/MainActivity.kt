@@ -3,16 +3,25 @@ package com.example.myapplication
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
+import com.example.myapplication.ui.home.HomeFragment
+import com.example.myapplication.ui.my.MyFragment
 
 class MainActivity : AppCompatActivity() {
     
     companion object {
         private const val TAG = "MainActivity"
     }
+    
+    private lateinit var viewPager: ViewPager2
+    private lateinit var tabLayout: TabLayout
+    
+    // Tab 标题列表
+    private val tabTitles = listOf("修图", "我的")
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,28 +31,45 @@ class MainActivity : AppCompatActivity() {
             setContentView(R.layout.activity_main)
             Log.d(TAG, "setContentView 完成")
 
-            // 查找导航控制器
-            val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
-            if (navHostFragment == null) {
-                Log.e(TAG, "NavHostFragment 未找到")
-                return
-            }
+            // 初始化 ViewPager2
+            viewPager = findViewById(R.id.view_pager)
+            Log.d(TAG, "ViewPager2 获取成功")
             
-            val navController: NavController = navHostFragment.navController
-            Log.d(TAG, "NavController 获取成功")
-
-            // 查找底部导航视图
-            val navView: BottomNavigationView = findViewById(R.id.bottom_nav_view)
-            Log.d(TAG, "BottomNavigationView 获取成功")
-
-            // 将导航控制器与底部导航视图关联起来
-            // 这样点击底部按钮时，NavHostFragment 中的页面就会自动切换
-            navView.setupWithNavController(navController)
-            Log.d(TAG, "导航设置完成")
+            // 初始化 TabLayout
+            tabLayout = findViewById(R.id.tab_layout)
+            Log.d(TAG, "TabLayout 获取成功")
+            
+            // 设置 ViewPager2 适配器
+            viewPager.adapter = MainPagerAdapter(this)
+            Log.d(TAG, "ViewPager2 适配器设置完成")
+            
+            // 使用 TabLayoutMediator 将 TabLayout 与 ViewPager2 关联
+            TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+                tab.text = tabTitles[position]
+                // 不设置图标，仅显示文字
+                tab.icon = null
+            }.attach()
+            Log.d(TAG, "TabLayout 与 ViewPager2 关联完成")
             
             Log.d(TAG, "MainActivity onCreate 完成")
         } catch (e: Exception) {
             Log.e(TAG, "MainActivity onCreate 异常", e)
+        }
+    }
+    
+    /**
+     * ViewPager2 适配器
+     */
+    private inner class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
+        
+        override fun getItemCount(): Int = tabTitles.size
+        
+        override fun createFragment(position: Int): Fragment {
+            return when (position) {
+                0 -> HomeFragment()
+                1 -> MyFragment()
+                else -> HomeFragment()
+            }
         }
     }
 }
