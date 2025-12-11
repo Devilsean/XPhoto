@@ -56,6 +56,9 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private lateinit var cropActionCard: MaterialCardView
     private lateinit var aspectRatioScroll: HorizontalScrollView
     
+    // 图片显示区域（用于裁剪坐标转换）
+    private var imageDisplayRect = android.graphics.RectF()
+    
     // 滤镜相关
     private lateinit var filterScroll: HorizontalScrollView
     private lateinit var filterRecyclerView: RecyclerView
@@ -268,6 +271,13 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
      */
     private fun enterCropMode() {
         isCropMode = true
+        
+        // 计算图片在屏幕上的实际显示区域
+        calculateImageDisplayRect()
+        
+        // 将显示区域传递给裁剪覆盖层
+        cropOverlayView.setImageDisplayRect(imageDisplayRect)
+        
         cropOverlayView.visibility = View.VISIBLE
         editorButtonCard.visibility = View.GONE
         cropActionCard.visibility = View.VISIBLE
@@ -291,16 +301,26 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
      */
     private fun applyCrop() {
         val cropRect = cropOverlayView.getCropRect()
-        val viewWidth = cropOverlayView.width.toFloat()
-        val viewHeight = cropOverlayView.height.toFloat()
         
-        // 将像素坐标转换为归一化坐标(0-1)
+        // 检查图片显示区域是否有效
+        if (imageDisplayRect.width() <= 0 || imageDisplayRect.height() <= 0) {
+            Toast.makeText(this, "裁剪区域无效", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // 将裁剪框坐标转换为相对于图片显示区域的归一化坐标(0-1)
         val normalizedRect = android.graphics.RectF(
-            cropRect.left / viewWidth,
-            cropRect.top / viewHeight,
-            cropRect.right / viewWidth,
-            cropRect.bottom / viewHeight
+            (cropRect.left - imageDisplayRect.left) / imageDisplayRect.width(),
+            (cropRect.top - imageDisplayRect.top) / imageDisplayRect.height(),
+            (cropRect.right - imageDisplayRect.left) / imageDisplayRect.width(),
+            (cropRect.bottom - imageDisplayRect.top) / imageDisplayRect.height()
         )
+        
+        // 确保坐标在有效范围内
+        normalizedRect.left = normalizedRect.left.coerceIn(0f, 1f)
+        normalizedRect.top = normalizedRect.top.coerceIn(0f, 1f)
+        normalizedRect.right = normalizedRect.right.coerceIn(0f, 1f)
+        normalizedRect.bottom = normalizedRect.bottom.coerceIn(0f, 1f)
         
         // 应用裁剪
         renderer.setCropRect(normalizedRect)
@@ -326,6 +346,46 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             else -> currentRatio
         }
         cropOverlayView.setAspectRatio(newRatio)
+    }
+    
+    /**
+     * 计算图片在GLSurfaceView中的实际显示区域
+     */
+    private fun calculateImageDisplayRect() {
+        val viewWidth = glSurfaceView.width.toFloat()
+        val viewHeight = glSurfaceView.height.toFloat()
+        
+        // 获取图片尺寸
+        val imageWidth = renderer.getImageWidth().toFloat()
+        val imageHeight = renderer.getImageHeight().toFloat()
+        
+        if (imageWidth <= 0 || imageHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) {
+            // 如果尺寸无效，使用整个视图
+            imageDisplayRect.set(0f, 0f, viewWidth, viewHeight)
+            return
+        }
+        
+        val screenRatio = viewWidth / viewHeight
+        val imageRatio = imageWidth / imageHeight
+        
+        val displayWidth: Float
+        val displayHeight: Float
+        
+        if (screenRatio > imageRatio) {
+            // 视口更宽，图片按高度适配
+            displayHeight = viewHeight
+            displayWidth = displayHeight * imageRatio
+        } else {
+            // 视口更高，图片按宽度适配
+            displayWidth = viewWidth
+            displayHeight = displayWidth / imageRatio
+        }
+        
+        // 计算居中显示的位置
+        val left = (viewWidth - displayWidth) / 2
+        val top = (viewHeight - displayHeight) / 2
+        
+        imageDisplayRect.set(left, top, left + displayWidth, top + displayHeight)
     }
 
     private fun loadDraft(draftId: Long) {

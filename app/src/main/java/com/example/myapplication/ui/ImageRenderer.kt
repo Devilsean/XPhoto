@@ -92,6 +92,20 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     }
     
     /**
+     * 获取当前图片宽度
+     */
+    fun getImageWidth(): Int {
+        return imageWidth
+    }
+    
+    /**
+     * 获取当前图片高度
+     */
+    fun getImageHeight(): Int {
+        return imageHeight
+    }
+    
+    /**
      * 设置裁剪区域（归一化坐标 0-1）
      */
     fun setCropRect(rect: android.graphics.RectF) {
@@ -127,6 +141,12 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
                 val validCropWidth = cropWidth.coerceIn(1, sourceBitmap.width - validCropX)
                 val validCropHeight = cropHeight.coerceIn(1, sourceBitmap.height - validCropY)
                 
+                // 检查裁剪区域是否有效
+                if (validCropWidth <= 0 || validCropHeight <= 0) {
+                    android.util.Log.e("ImageRenderer", "无效的裁剪区域")
+                    return
+                }
+                
                 // 裁剪图片
                 val newCroppedBitmap = Bitmap.createBitmap(
                     sourceBitmap,
@@ -136,25 +156,31 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
                     validCropHeight
                 )
                 
-                // 释放旧的裁剪 bitmap
-                if (croppedBitmap != null && croppedBitmap != sourceBitmap) {
+                // 释放旧的裁剪 bitmap（但不释放原始 bitmap）
+                if (croppedBitmap != null && croppedBitmap != originalBitmap) {
                     croppedBitmap?.recycle()
                 }
                 croppedBitmap = newCroppedBitmap
                 
                 // 更新图片尺寸
-                imageWidth = croppedBitmap!!.width
-                imageHeight = croppedBitmap!!.height
+                imageWidth = newCroppedBitmap.width
+                imageHeight = newCroppedBitmap.height
                 
                 // 重新加载纹理（在 GL 线程中）
-                reloadTexture(croppedBitmap!!)
+                reloadTexture(newCroppedBitmap)
                 
-                // 重置变换
+                // 重置变换以适应新的裁剪图片
                 scaleFactor = 1.0f
                 offsetX = 0.0f
                 offsetY = 0.0f
                 
+                // 清除裁剪矩形，避免重复应用
+                cropRect = null
+                
+                android.util.Log.d("ImageRenderer", "裁剪成功: ${newCroppedBitmap.width}x${newCroppedBitmap.height}")
+                
             } catch (e: Exception) {
+                android.util.Log.e("ImageRenderer", "裁剪失败", e)
                 e.printStackTrace()
             }
         }
