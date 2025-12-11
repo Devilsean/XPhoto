@@ -1,14 +1,17 @@
 package com.example.myapplication.ui
 
+import android.animation.ValueAnimator
 import android.content.ContentValues
 import android.graphics.Bitmap
 import android.net.Uri
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
@@ -29,19 +32,30 @@ import com.example.myapplication.data.repository.EditedImageRepository
 import com.example.myapplication.ui.widget.CropOverlayView
 import kotlinx.coroutines.launch
 import java.io.OutputStream
+import kotlin.math.abs
 
 
 class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private lateinit var glSurfaceView: GLSurfaceView
     private lateinit var renderer: ImageRenderer
     private lateinit var scaleGestureDetector: ScaleGestureDetector
+    private lateinit var gestureDetector: GestureDetector
     
     // 数据库相关
     private lateinit var draftRepository: DraftRepository
     private lateinit var editedImageRepository: EditedImageRepository
     
+    // 手势相关变量
     private var lastTouchX: Float = 0.0f
     private var lastTouchY: Float = 0.0f
+    private var activePointerId: Int = MotionEvent.INVALID_POINTER_ID
+    private var isScaling: Boolean = false
+    private var flingAnimator: ValueAnimator? = null
+    
+    // 缩放焦点相关
+    private var lastFocusX: Float = 0f
+    private var lastFocusY: Float = 0f
+    
     private var exitAfterSave = false
     
     // 当前草稿ID，如果是新建则为null
@@ -130,6 +144,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         }
         
         scaleGestureDetector = ScaleGestureDetector(this, ScaleListener())
+        gestureDetector = GestureDetector(this, GestureListener())
         
         setupButtons()
         setupFilterRecyclerView()
@@ -735,45 +750,245 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        //裁剪模式或滤镜模式下不处理图片的缩放和移动
+        // 裁剪模式或滤镜模式下不处理图片的缩放和移动
         if (isCropMode || isFilterMode) {
             return super.onTouchEvent(event)
         }
         
+        // 先处理缩放手势
         scaleGestureDetector.onTouchEvent(event)
-        when (event.action) {
+        // 处理惯性滑动
+        gestureDetector.onTouchEvent(event)
+        
+        val action = event.actionMasked
+        
+        when (action) {
             MotionEvent.ACTION_DOWN -> {
+                // 取消正在进行的惯性动画
+                cancelFlingAnimation()
+                
+                // 记录第一个触摸点
+                activePointerId = event.getPointerId(0)
                 lastTouchX = event.x
                 lastTouchY = event.y
+                isScaling = false
             }
+            
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                // 多指触摸开始，标记为缩放状态
+                isScaling = true
+            }
+            
             MotionEvent.ACTION_MOVE -> {
-                if (!scaleGestureDetector.isInProgress) {
-                    val dx = event.x - lastTouchX
-                    val dy = event.y - lastTouchY
-                    renderer.offsetX += dx * 2/ glSurfaceView.width
-                    renderer.offsetY -= dy * 2 / glSurfaceView.height
-                    glSurfaceView.requestRender()
+                // 只有单指且不在缩放时才处理平移
+                if (!scaleGestureDetector.isInProgress && !isScaling && event.pointerCount == 1) {
+                    val pointerIndex = event.findPointerIndex(activePointerId)
+                    if (pointerIndex != -1) {
+                        val x = event.getX(pointerIndex)
+                        val y = event.getY(pointerIndex)
+                        
+                        val dx = x - lastTouchX
+                        val dy = y - lastTouchY
+                        
+                        // 应用平移，考虑当前缩放因子
+                        applyTranslation(dx, dy)
+                        
+                        lastTouchX = x
+                        lastTouchY = y
+                    }
                 }
-                lastTouchX = event.x
-                lastTouchY = event.y
             }
-            MotionEvent.ACTION_UP -> {
+            
+            MotionEvent.ACTION_POINTER_UP -> {
+                // 处理多指抬起
+                val pointerIndex = event.actionIndex
+                val pointerId = event.getPointerId(pointerIndex)
+                
+                if (pointerId == activePointerId) {
+                    // 当前跟踪的手指抬起，切换到另一个手指
+                    val newPointerIndex = if (pointerIndex == 0) 1 else 0
+                    if (newPointerIndex < event.pointerCount) {
+                        lastTouchX = event.getX(newPointerIndex)
+                        lastTouchY = event.getY(newPointerIndex)
+                        activePointerId = event.getPointerId(newPointerIndex)
+                    }
+                }
+                
+                // 如果只剩一个手指，重置缩放状态
+                if (event.pointerCount <= 2) {
+                    isScaling = false
+                }
+            }
+            
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                activePointerId = MotionEvent.INVALID_POINTER_ID
+                isScaling = false
                 // 触摸结束时自动保存草稿
                 autoSaveDraft()
             }
         }
         return true
     }
+    
+    /**
+     * 应用平移变换
+     */
+    private fun applyTranslation(dx: Float, dy: Float) {
+        // 将屏幕像素转换为 OpenGL 坐标系的偏移量
+        // 考虑当前缩放因子，使平移速度与缩放级别匹配
+        val scaleAdjustedDx = dx * 2f / glSurfaceView.width / renderer.scaleFactor
+        val scaleAdjustedDy = -dy * 2f / glSurfaceView.height / renderer.scaleFactor
+        
+        renderer.offsetX += scaleAdjustedDx
+        renderer.offsetY += scaleAdjustedDy
+        
+        // 应用边界限制（可选，防止图片完全移出视野）
+        applyBoundaryConstraints()
+        
+        glSurfaceView.requestRender()
+    }
+    
+    /**
+     * 应用边界约束，防止图片完全移出视野
+     */
+    private fun applyBoundaryConstraints() {
+        // 计算最大允许偏移量（基于缩放因子）
+        val maxOffset = 2f / renderer.scaleFactor
+        
+        // 限制偏移量在合理范围内
+        renderer.offsetX = renderer.offsetX.coerceIn(-maxOffset, maxOffset)
+        renderer.offsetY = renderer.offsetY.coerceIn(-maxOffset, maxOffset)
+    }
+    
+    /**
+     * 取消惯性动画
+     */
+    private fun cancelFlingAnimation() {
+        flingAnimator?.cancel()
+        flingAnimator = null
+    }
+    
+    /**
+     * 执行惯性滑动动画
+     */
+    private fun performFling(velocityX: Float, velocityY: Float) {
+        cancelFlingAnimation()
+        
+        // 计算惯性滑动的初始速度（转换为 OpenGL 坐标系）
+        val initialVelocityX = velocityX / glSurfaceView.width / renderer.scaleFactor
+        val initialVelocityY = -velocityY / glSurfaceView.height / renderer.scaleFactor
+        
+        // 惯性动画持续时间
+        val duration = 500L
+        
+        flingAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
+            this.duration = duration
+            interpolator = DecelerateInterpolator(2f)
+            
+            var lastFraction = 1f
+            addUpdateListener { animator ->
+                val fraction = animator.animatedValue as Float
+                val delta = lastFraction - fraction
+                lastFraction = fraction
+                
+                // 应用衰减的速度
+                renderer.offsetX += initialVelocityX * delta * duration / 1000f
+                renderer.offsetY += initialVelocityY * delta * duration / 1000f
+                
+                applyBoundaryConstraints()
+                glSurfaceView.requestRender()
+            }
+            
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    autoSaveDraft()
+                }
+            })
+            
+            start()
+        }
+    }
+    
+    /**
+     * 手势监听器 - 处理惯性滑动
+     */
+    private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            // 只有在非缩放状态下才处理惯性滑动
+            if (!isScaling && !scaleGestureDetector.isInProgress) {
+                // 速度阈值，避免过小的滑动触发惯性
+                val minVelocity = 500f
+                if (abs(velocityX) > minVelocity || abs(velocityY) > minVelocity) {
+                    performFling(velocityX, velocityY)
+                    return true
+                }
+            }
+            return false
+        }
+    }
 
+    /**
+     * 缩放手势监听器 - 支持焦点缩放
+     */
     private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+            // 记录缩放开始时的焦点位置
+            lastFocusX = detector.focusX
+            lastFocusY = detector.focusY
+            isScaling = true
+            return true
+        }
+        
         override fun onScale(detector: ScaleGestureDetector): Boolean {
-            renderer.scaleFactor *= detector.scaleFactor
-            renderer.scaleFactor = Math.max(0.1f, Math.min(renderer.scaleFactor, 5.0f))
+            val scaleFactor = detector.scaleFactor
+            val oldScale = renderer.scaleFactor
+            
+            // 计算新的缩放因子
+            var newScale = oldScale * scaleFactor
+            newScale = newScale.coerceIn(0.1f, 5.0f)
+            
+            // 计算焦点在 OpenGL 坐标系中的位置
+            val focusX = detector.focusX
+            val focusY = detector.focusY
+            
+            // 将屏幕焦点转换为归一化坐标 (-1 到 1)
+            val normalizedFocusX = (focusX / glSurfaceView.width) * 2f - 1f
+            val normalizedFocusY = 1f - (focusY / glSurfaceView.height) * 2f
+            
+            // 计算缩放前焦点在图片坐标系中的位置
+            val imageX = (normalizedFocusX - renderer.offsetX * oldScale) / oldScale
+            val imageY = (normalizedFocusY - renderer.offsetY * oldScale) / oldScale
+            
+            // 应用新的缩放因子
+            renderer.scaleFactor = newScale
+            
+            // 调整偏移量，使焦点位置保持不变
+            renderer.offsetX = (normalizedFocusX - imageX * newScale) / newScale
+            renderer.offsetY = (normalizedFocusY - imageY * newScale) / newScale
+            
+            // 同时处理双指平移
+            val dx = focusX - lastFocusX
+            val dy = focusY - lastFocusY
+            if (abs(dx) > 1 || abs(dy) > 1) {
+                renderer.offsetX += dx * 2f / glSurfaceView.width / newScale
+                renderer.offsetY -= dy * 2f / glSurfaceView.height / newScale
+            }
+            
+            lastFocusX = focusX
+            lastFocusY = focusY
+            
+            applyBoundaryConstraints()
             glSurfaceView.requestRender()
             return true
         }
         
         override fun onScaleEnd(detector: ScaleGestureDetector) {
+            isScaling = false
             // 缩放结束时自动保存草稿
             autoSaveDraft()
         }
