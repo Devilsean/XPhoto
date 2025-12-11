@@ -69,6 +69,12 @@
             android:name=".ui.EditProfileActivity"
             android:exported="false"
             android:label="编辑个人信息" />
+        
+        <!-- 图片查看器 -->
+        <activity
+            android:name=".ui.ImageViewerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
     </application>
 
 </manifest>

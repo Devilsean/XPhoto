@@ -31,6 +31,8 @@ import com.example.myapplication.data.repository.DraftRepository
 import com.example.myapplication.data.repository.EditedImageRepository
 import com.example.myapplication.ui.widget.CropOverlayView
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 import kotlin.math.abs
 
@@ -57,6 +59,13 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private var lastFocusY: Float = 0f
     
     private var exitAfterSave = false
+    
+    // 保存/导出模式
+    private enum class SaveMode {
+        SAVE_TO_WORKS,      // 保存到作品（应用内部存储）
+        EXPORT_TO_GALLERY   // 导出到系统相册
+    }
+    private var currentSaveMode = SaveMode.SAVE_TO_WORKS
     
     // 当前草稿ID，如果是新建则为null
     private var currentDraftId: Long? = null
@@ -198,8 +207,16 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             autoSaveDraft()
         }
         
-        // 导出按钮
-        findViewById<Button>(R.id.export_button).setOnClickListener {
+        // 保存按钮 - 保存到作品中
+        findViewById<LinearLayout>(R.id.save_button).setOnClickListener {
+            currentSaveMode = SaveMode.SAVE_TO_WORKS
+            renderer.takeScreenshot()
+            glSurfaceView.requestRender()
+        }
+        
+        // 导出按钮 - 导出到系统相册
+        findViewById<LinearLayout>(R.id.export_button).setOnClickListener {
+            currentSaveMode = SaveMode.EXPORT_TO_GALLERY
             renderer.takeScreenshot()
             glSurfaceView.requestRender()
         }
@@ -717,9 +734,10 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private fun showExitConfirmationDialog() {
         AlertDialog.Builder(this)
             .setTitle("退出编辑")
-            .setMessage("是否要保存当前更改？")
+            .setMessage("是否要保存当前更改到作品中？")
             .setPositiveButton("保存") { _, _ ->
                 exitAfterSave = true
+                currentSaveMode = SaveMode.SAVE_TO_WORKS
                 renderer.takeScreenshot()
                 glSurfaceView.requestRender()
             }
@@ -995,6 +1013,62 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     }
 
     override fun onScreenshotTaken(bitmap: Bitmap) {
+        when (currentSaveMode) {
+            SaveMode.SAVE_TO_WORKS -> saveToWorks(bitmap)
+            SaveMode.EXPORT_TO_GALLERY -> exportToGallery(bitmap)
+        }
+    }
+    
+    /**
+     * 保存到作品（应用内部存储）
+     */
+    private fun saveToWorks(bitmap: Bitmap) {
+        lifecycleScope.launch {
+            try {
+                val fileName = "work_${System.currentTimeMillis()}.png"
+                // 保存到应用私有目录
+                val worksDir = File(filesDir, "works")
+                if (!worksDir.exists()) {
+                    worksDir.mkdirs()
+                }
+                val file = File(worksDir, fileName)
+                
+                FileOutputStream(file).use { stream ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                }
+                
+                // 保存记录到数据库
+                val editedImage = EditedImage(
+                    originalImageUri = originalImageUri ?: "",
+                    editedImageUri = file.absolutePath,
+                    isExported = false,
+                    createdAt = System.currentTimeMillis(),
+                    modifiedAt = System.currentTimeMillis()
+                )
+                editedImageRepository.saveEditedImage(editedImage)
+                
+                runOnUiThread {
+                    Toast.makeText(this@EditorActivity, "已保存到作品", Toast.LENGTH_SHORT).show()
+                    if (exitAfterSave) {
+                        finish()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    Toast.makeText(this@EditorActivity, "保存失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    if (exitAfterSave) {
+                        finish()
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 导出到系统相册
+     */
+    private fun exportToGallery(bitmap: Bitmap) {
         val fileName = "edited_image_${System.currentTimeMillis()}.png"
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
@@ -1011,10 +1085,10 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 stream = resolver.openOutputStream(uri)
                 if (stream != null) {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                    // 保存编辑记录到数据库
-                    saveEditedImageRecord(uri.toString())
+                    // 保存编辑记录到数据库（标记为已导出）
+                    saveExportedImageRecord(uri.toString())
                     runOnUiThread {
-                        Toast.makeText(this, "图片已保存至相册", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "已导出到系统相册", Toast.LENGTH_SHORT).show()
                         if (exitAfterSave) {
                             finish()
                         }
@@ -1026,7 +1100,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 resolver.delete(uri, null, null)
             }
             runOnUiThread {
-                Toast.makeText(this, "图片保存失败", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
                 if (exitAfterSave) {
                     finish()
                 }
@@ -1036,28 +1110,41 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         }
     }
 
-    private fun saveEditedImageRecord(editedUri: String) {
+    /**
+     * 保存导出记录到数据库
+     */
+    private fun saveExportedImageRecord(exportedUri: String) {
         if (originalImageUri == null) return
         
         lifecycleScope.launch {
             try {
+                // 先保存到作品目录
+                val fileName = "work_${System.currentTimeMillis()}.png"
+                val worksDir = File(filesDir, "works")
+                if (!worksDir.exists()) {
+                    worksDir.mkdirs()
+                }
+                val localFile = File(worksDir, fileName)
+                
+                // 从导出的URI复制一份到本地
+                contentResolver.openInputStream(Uri.parse(exportedUri))?.use { input ->
+                    FileOutputStream(localFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                
                 val editedImage = EditedImage(
                     originalImageUri = originalImageUri!!,
-                    editedImageUri = editedUri,
+                    editedImageUri = localFile.absolutePath,
+                    exportedUri = exportedUri,
+                    isExported = true,
                     createdAt = System.currentTimeMillis(),
                     modifiedAt = System.currentTimeMillis()
                 )
                 editedImageRepository.saveEditedImage(editedImage)
-                
-                // 导出成功后，可以选择删除草稿
-                // if (currentDraftId != null) {
-                //     val draft = draftRepository.getDraftById(currentDraftId!!)
-                //     if (draft != null) {
-                //         draftRepository.deleteDraft(draft)
-                //     }
-                // }
             } catch (e: Exception) {
                 e.printStackTrace()
+                android.util.Log.e("EditorActivity", "保存导出记录失败", e)
             }
         }
     }

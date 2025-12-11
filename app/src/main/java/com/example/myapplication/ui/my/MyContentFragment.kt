@@ -1,17 +1,22 @@
 package com.example.myapplication.ui.my
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.data.entity.EditedImage
+import com.example.myapplication.ui.ImageViewerActivity
 import kotlinx.coroutines.launch
-import com.bumptech.glide.Glide 
+import com.bumptech.glide.Glide
+import java.io.File
 
 class MyContentFragment : Fragment() {
     private var contentType: String? = null
@@ -28,8 +33,8 @@ class MyContentFragment : Fragment() {
     ): View? {
         val recyclerView = RecyclerView(requireContext())
         recyclerView.layoutManager = GridLayoutManager(context, 3)
-        recyclerView.setHasFixedSize(true) 
-        recyclerView.setItemViewCacheSize(20)  
+        recyclerView.setHasFixedSize(true)
+        recyclerView.setItemViewCacheSize(20)
 
         // 获取Repository
         val app = requireActivity().application as com.example.myapplication.MyApplication
@@ -41,54 +46,7 @@ class MyContentFragment : Fragment() {
                 val editedImageRepository = app.editedImageRepository
                 viewLifecycleOwner.lifecycleScope.launch {
                     editedImageRepository.allEditedImages.collect { images ->
-                        recyclerView.adapter =
-                            object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-                                override fun onCreateViewHolder(
-                                    parent: ViewGroup,
-                                    viewType: Int
-                                ): RecyclerView.ViewHolder {
-                                    val itemView = LayoutInflater.from(parent.context)
-                                        .inflate(R.layout.item_draft, parent, false)
-                                    
-                                    // 设置固定4:3比例的高度
-                                    val displayMetrics = parent.context.resources.displayMetrics
-                                    val screenWidth = displayMetrics.widthPixels
-                                    val itemWidth = screenWidth / 3
-                                    val itemHeight = (itemWidth * 4 / 3f).toInt()
-                                    
-                                    val imageView = itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
-                                    imageView.layoutParams.height = itemHeight
-                                    
-                                    return object : RecyclerView.ViewHolder(itemView) {}
-                                }
-
-                                override fun onBindViewHolder(
-                                    holder: RecyclerView.ViewHolder,
-                                    position: Int
-                                ) {
-                                    val image = images[position]
-                                    val imageView =
-                                        holder.itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
-
-                                    // 加载已编辑的图片
-                                    try {
-                                        val uri = android.net.Uri.parse(image.editedImageUri)
-                                        Glide.with(holder.itemView.context)
-                                            .load(uri)
-                                            .placeholder(android.R.color.darker_gray)
-                                            .into(imageView)
-                                    } catch (e: Exception) {
-                                        imageView.setImageResource(android.R.color.darker_gray)
-                                    }
-
-                                    // 点击查看大图（可选功能）
-                                    holder.itemView.setOnClickListener {
-                                        // TODO: 打开图片查看器
-                                    }
-                                }
-
-                                override fun getItemCount(): Int = images.size
-                            }
+                        recyclerView.adapter = createImageAdapter(images, showFavoriteBadge = true)
                     }
                 }
             }
@@ -157,42 +115,12 @@ class MyContentFragment : Fragment() {
             }
 
             "收藏" -> {
-                // 显示相册
-                val albumRepository = app.albumRepository
+                // 显示收藏的作品
+                recyclerView.layoutManager = GridLayoutManager(context, 3)
+                val editedImageRepository = app.editedImageRepository
                 viewLifecycleOwner.lifecycleScope.launch {
-                    albumRepository.allAlbums.collect { albums ->
-                        recyclerView.adapter =
-                            object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-                                override fun onCreateViewHolder(
-                                    parent: ViewGroup,
-                                    viewType: Int
-                                ): RecyclerView.ViewHolder {
-                                    val textView = TextView(parent.context).apply {
-                                        layoutParams = ViewGroup.LayoutParams(
-                                            ViewGroup.LayoutParams.MATCH_PARENT,
-                                            300
-                                        )
-                                        gravity = android.view.Gravity.CENTER
-                                    }
-                                    return object : RecyclerView.ViewHolder(textView) {}
-                                }
-
-                                override fun onBindViewHolder(
-                                    holder: RecyclerView.ViewHolder,
-                                    position: Int
-                                ) {
-                                    val album = albums[position]
-                                    (holder.itemView as TextView).text = "${album.name}\n${
-                                        java.text.SimpleDateFormat(
-                                            "MM-dd",
-                                            java.util.Locale.getDefault()
-                                        )
-                                            .format(java.util.Date(album.createdAt))
-                                    }"
-                                }
-
-                                override fun getItemCount(): Int = albums.size
-                            }
+                    editedImageRepository.favoriteImages.collect { images ->
+                        recyclerView.adapter = createImageAdapter(images, showFavoriteBadge = true)
                     }
                 }
             }
@@ -226,6 +154,81 @@ class MyContentFragment : Fragment() {
             }
         }
         return recyclerView
+    }
+    
+    /**
+     * 创建图片适配器
+     */
+    private fun createImageAdapter(images: List<EditedImage>, showFavoriteBadge: Boolean): RecyclerView.Adapter<RecyclerView.ViewHolder> {
+        return object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun onCreateViewHolder(
+                parent: ViewGroup,
+                viewType: Int
+            ): RecyclerView.ViewHolder {
+                val itemView = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_draft, parent, false)
+                
+                // 设置固定4:3比例的高度
+                val displayMetrics = parent.context.resources.displayMetrics
+                val screenWidth = displayMetrics.widthPixels
+                val itemWidth = screenWidth / 3
+                val itemHeight = (itemWidth * 4 / 3f).toInt()
+                
+                val imageView = itemView.findViewById<ImageView>(R.id.iv_draft_preview)
+                imageView.layoutParams.height = itemHeight
+                
+                return object : RecyclerView.ViewHolder(itemView) {}
+            }
+
+            override fun onBindViewHolder(
+                holder: RecyclerView.ViewHolder,
+                position: Int
+            ) {
+                val image = images[position]
+                val imageView = holder.itemView.findViewById<ImageView>(R.id.iv_draft_preview)
+                
+                // 显示收藏标识
+                val favoriteBadge = holder.itemView.findViewById<ImageView>(R.id.iv_favorite_badge)
+                if (showFavoriteBadge && image.isFavorite) {
+                    favoriteBadge?.visibility = View.VISIBLE
+                } else {
+                    favoriteBadge?.visibility = View.GONE
+                }
+
+                // 加载已编辑的图片
+                try {
+                    val imagePath = image.editedImageUri
+                    // 判断是文件路径还是URI
+                    val imageSource: Any = if (imagePath.startsWith("/") || imagePath.startsWith("file://")) {
+                        // 文件路径
+                        File(imagePath.removePrefix("file://"))
+                    } else {
+                        // URI
+                        android.net.Uri.parse(imagePath)
+                    }
+                    
+                    Glide.with(holder.itemView.context)
+                        .load(imageSource)
+                        .placeholder(android.R.color.darker_gray)
+                        .error(android.R.color.darker_gray)
+                        .into(imageView)
+                } catch (e: Exception) {
+                    android.util.Log.e("MyContentFragment", "加载图片失败: ${image.editedImageUri}", e)
+                    imageView.setImageResource(android.R.color.darker_gray)
+                }
+
+                // 点击查看大图
+                holder.itemView.setOnClickListener {
+                    val intent = Intent(requireActivity(), ImageViewerActivity::class.java)
+                    intent.putExtra("image_path", image.editedImageUri)
+                    intent.putExtra("image_id", image.id)
+                    intent.putExtra("is_favorite", image.isFavorite)
+                    startActivity(intent)
+                }
+            }
+
+            override fun getItemCount(): Int = images.size
+        }
     }
 
     companion object {

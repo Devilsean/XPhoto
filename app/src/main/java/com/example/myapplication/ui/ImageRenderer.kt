@@ -263,9 +263,7 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
             transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
             
             // 保存原始 bitmap 用于裁剪
-            originalBitmap = context.contentResolver.openInputStream(imageUri)?.use {
-                BitmapFactory.decodeStream(it)
-            }
+            originalBitmap = loadBitmapFromUri(context, imageUri)
             
             if (originalBitmap == null) {
                 android.util.Log.e("ImageRenderer", "无法加载原始图片用于裁剪")
@@ -445,9 +443,7 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         }
         
         val bitmap = try {
-            context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it)
-            } ?: throw RuntimeException("无法打开图片流")
+            loadBitmapFromUri(context, uri)
         } catch (e: Exception) {
             throw RuntimeException("加载图片失败: ${e.message}", e)
         }
@@ -471,5 +467,39 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         bitmap.recycle()
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,0)
         return textureIds[0]
+    }
+    
+    /**
+     * 从URI加载Bitmap，支持file URI和content URI
+     */
+    private fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? {
+        return when (uri.scheme) {
+            "file" -> {
+                // file URI，直接从文件路径加载
+                val filePath = uri.path
+                if (filePath != null) {
+                    BitmapFactory.decodeFile(filePath)
+                } else {
+                    null
+                }
+            }
+            "content" -> {
+                // content URI，使用ContentResolver
+                context.contentResolver.openInputStream(uri)?.use {
+                    BitmapFactory.decodeStream(it)
+                }
+            }
+            else -> {
+                // 尝试作为文件路径处理
+                val path = uri.toString()
+                if (path.startsWith("/")) {
+                    BitmapFactory.decodeFile(path)
+                } else {
+                    context.contentResolver.openInputStream(uri)?.use {
+                        BitmapFactory.decodeStream(it)
+                    }
+                }
+            }
+        }
     }
 }

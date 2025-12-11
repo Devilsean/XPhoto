@@ -7,11 +7,29 @@
     app:cardElevation="2dp"
     app:cardBackgroundColor="@android:color/transparent">
 
-    <ImageView
-        android:id="@+id/iv_draft_preview"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:scaleType="centerCrop"
-        android:background="@android:color/darker_gray" />
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/iv_draft_preview"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:scaleType="centerCrop"
+            android:background="@android:color/darker_gray" />
+
+        <!-- 收藏标识 -->
+        <ImageView
+            android:id="@+id/iv_favorite_badge"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="6dp"
+            android:src="@drawable/ic_heart_full"
+            app:tint="#FF4081"
+            android:visibility="gone"
+            android:contentDescription="已收藏" />
+
+    </FrameLayout>
 
 </androidx.cardview.widget.CardView>

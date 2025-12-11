@@ -521,28 +521,62 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp" />
 
-            <!-- 导出按钮 -->
-            <com.google.android.material.button.MaterialButton
+            <!-- 保存按钮 - 保存到作品中 -->
+            <LinearLayout
+                android:id="@+id/save_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_save"
+                    app:tint="@color/white"
+                    android:contentDescription="保存" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="保存"
+                    android:textColor="@color/white"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <!-- 导出按钮 - 导出到系统相册 -->
+            <LinearLayout
                 android:id="@+id/export_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                android:layout_marginStart="4dp">
 
-                style="@style/Widget.Material3.Button"
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_download"
+                    app:tint="#FF8FA8"
+                    android:contentDescription="导出" />
 
-                android:text="导出"
-                android:textSize="13sp"
-                android:textColor="#FF8FA8"
-
-                app:icon="@drawable/ic_download"
-                app:iconTint="#FF8FA8"
-                app:iconGravity="textStart"
-                app:iconSize="20dp"
-                app:iconPadding="4dp"
-
-                app:backgroundTint="@android:color/transparent"
-                app:rippleColor="@android:color/transparent"
-                app:strokeWidth="0dp"
-                app:strokeColor="@android:color/transparent" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="导出"
+                    android:textColor="#FF8FA8"
+                    android:textSize="10sp" />
+            </LinearLayout>
 
 
         </LinearLayout>
