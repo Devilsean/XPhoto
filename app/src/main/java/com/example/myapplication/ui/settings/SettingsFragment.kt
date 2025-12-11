@@ -21,140 +21,130 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences_settings, rootKey)
 
-        // “主题设置”功能
-        val themePreference: ListPreference? = findPreference("theme")
-        themePreference?.setOnPreferenceChangeListener { _, newValue ->
-            when (newValue as String) {
-                "light" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                "dark" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                "system" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        // 1. 主题设置
+        findPreference<ListPreference>("theme")?.apply {
+            // 显示当前选择项作为 summary
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+            setOnPreferenceChangeListener { _, newValue ->
+                when (newValue as String) {
+                    "light" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    "dark" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    "system" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                }
+                true
+            }
+        }
+
+        // 2. 语言设置
+        findPreference<ListPreference>("language")?.apply {
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+            setOnPreferenceChangeListener { _, newValue ->
+                val locale = LocaleListCompat.forLanguageTags(newValue as String)
+                AppCompatDelegate.setApplicationLocales(locale)
+
+                context?.let { ctx ->
+                    MaterialAlertDialogBuilder(ctx)
+                        .setTitle("语言已更改")
+                        .setMessage("为了让新的语言设置完全生效，建议立即重启应用。")
+                        .setPositiveButton("立即重启") { _, _ ->
+                            val intent = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+                            val componentName = intent?.component
+                            if (componentName != null) {
+                                val mainIntent = Intent.makeRestartActivityTask(componentName)
+                                ctx.startActivity(mainIntent)
+                            }
+                            Runtime.getRuntime().exit(0)
+                        }
+                        .setNegativeButton("稍后", null)
+                        .setCancelable(false)
+                        .show()
+                }
+                true
+            }
+        }
+
+        // 3. 通知管理：跳系统设置
+        findPreference<Preference>("notifications")?.setOnPreferenceClickListener {
+            context?.let { ctx ->
+                try {
+                    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)
+                        }
+                    } else {
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", ctx.packageName, null)
+                        }
+                    }
+                    startActivity(intent)
+                } catch (_: Exception) {
+                    Toast.makeText(ctx, "无法打开通知设置", Toast.LENGTH_SHORT).show()
+                }
             }
             true
         }
 
-        val clearCachePreference: Preference? = findPreference("clear_cache")
-        clearCachePreference?.setOnPreferenceClickListener {
+        // 4. 清理缓存
+        findPreference<Preference>("clear_cache")?.setOnPreferenceClickListener { pref ->
             context?.let { ctx ->
                 MaterialAlertDialogBuilder(ctx)
                     .setTitle("清理缓存")
                     .setMessage("这将清除应用的临时缓存文件，可能会释放存储空间。确定要继续吗？")
                     .setNegativeButton("取消", null)
                     .setPositiveButton("确定") { _, _ ->
-                        ctx.cacheDir?.deleteRecursively()
-                        clearCachePreference.summary = "缓存已清理"
+                        val deleted = ctx.cacheDir?.deleteRecursively() ?: false
+                        pref.summary = if (deleted) {
+                            "缓存已清理"
+                        } else {
+                            "当前无可清理缓存"
+                        }
                     }
                     .show()
             }
             true
         }
 
-        // “语言设置”功能
-        val languagePreference: ListPreference? = findPreference("language")
-        languagePreference?.setOnPreferenceChangeListener { _, newValue ->
-            val locale = LocaleListCompat.forLanguageTags(newValue as String)
-            AppCompatDelegate.setApplicationLocales(locale)
-            context?.let { ctx ->
-                MaterialAlertDialogBuilder(ctx)
-                    .setTitle("语言已更改")
-                    .setMessage("为了让新的语言设置完全生效，建议立即重启应用。")
-                    .setPositiveButton("立即重启") { _, _ ->
-                        // 创建一个意图来启动应用的主活动
-                        val intent = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
-                        val componentName = intent?.component
-                        val mainIntent = Intent.makeRestartActivityTask(componentName)
-                        ctx.startActivity(mainIntent)
-                        Runtime.getRuntime().exit(0)
-                    }
-                    .setNegativeButton("稍后", null)
-                    .setCancelable(false)
-                    .show()
+        // 5. 历史记录深度
+        findPreference<EditTextPreference>("history_depth")?.apply {
+            // 初始化 summary（第一次打开时）
+            if (text.isNullOrBlank()) {
+                text = "50"
             }
-            true
+            summary = "当前：${text} 步"
+
+            setOnPreferenceChangeListener { preference, newValue ->
+                val value = (newValue as? String)?.toIntOrNull()
+                if (value == null || value <= 0) {
+                    Toast.makeText(context, "请输入大于 0 的数字", Toast.LENGTH_SHORT).show()
+                    return@setOnPreferenceChangeListener false
+                }
+                preference.summary = "当前：$value 步"
+                true
+            }
         }
 
-        // 为“退出登录”添加点击事件和确认对话框
-        val logoutPreference: Preference? = findPreference("logout")
-        logoutPreference?.setOnPreferenceClickListener {
+        // 6. 关于应用
+        findPreference<Preference>("about_us")?.setOnPreferenceClickListener {
             context?.let { ctx ->
                 MaterialAlertDialogBuilder(ctx)
-                    .setTitle("确认退出")
-                    .setMessage("您确定要退出登录吗？")
-                    .setNegativeButton("取消", null)
-                    .setPositiveButton("确定") { _, _ ->
-                        // 在这里处理实际的退出登录逻辑
-                    }
-                    .show()
-            }
-            true
-        }
-
-
-        // “关于我们”功能
-        val aboutUsPreference: Preference? = findPreference("about_us")
-        aboutUsPreference?.setOnPreferenceClickListener {
-            context?.let { ctx ->
-                MaterialAlertDialogBuilder(ctx)
-                    .setTitle("关于 MyApplication")
-                    .setMessage("版本 1.0.0\n\n一个强大的图片编辑应用。\n\n© 2024 Gemini-Code-Assistant")
+                    .setTitle("关于本应用")
+                    .setMessage("版本 1.0.0\n\n醒图安卓训练营 · 图片编辑 Demo 应用。\n\n主要功能：相册浏览、OpenGL 编辑画布、基础裁剪与导出。\n\n© 2025 Sean（部分功能在 AI 辅助下完成，并由本人理解与整合）")
                     .setPositiveButton("确定", null)
                     .show()
             }
             true
         }
 
-        // “隐私政策”功能
-        val privacyPolicyPreference: Preference? = findPreference("privacy_policy")
-        privacyPolicyPreference?.setOnPreferenceClickListener {
-            val url = "https://policies.google.com/privacy" // 请替换为您的隐私政策链接
+        // 7. 隐私政策
+        findPreference<Preference>("privacy_policy")?.setOnPreferenceClickListener {
+            val url = "https://policies.google.com/privacy" // 使用google隐私政策占位
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            startActivity(intent)
-            true
-        }
-
-        // “通知管理”功能
-        val notificationsPreference: Preference? = findPreference("notifications")
-        notificationsPreference?.setOnPreferenceClickListener {
-            context?.let { ctx ->
-                val intent = Intent()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
-                    intent.putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)
-                } else {
-                    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                    intent.data = Uri.fromParts("package", ctx.packageName, null)
-                }
-                startActivity(intent)
-            }
-            true
-        }
-
-        // “历史记录深度”功能
-        val historyDepthPreference: EditTextPreference? = findPreference("history_depth")
-        historyDepthPreference?.summary = "当前: ${historyDepthPreference?.text} 步" // 初始化摘要
-        historyDepthPreference?.setOnPreferenceChangeListener { preference, newValue ->
-            preference.summary = "当前: $newValue 步" // 当值改变时更新摘要
-            true
-        }
-
-        // “本地存储路径”功能
-        val storagePathPreference: Preference? = findPreference("storage_path")
-        storagePathPreference?.setOnPreferenceClickListener {
-            val path = storagePathPreference.summary.toString()
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.setDataAndType(Uri.parse(path), "resource/folder")
             try {
                 startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(context, "未找到可以打开此路径的应用", Toast.LENGTH_SHORT).show()
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(context, "未找到可以打开此链接的浏览器应用", Toast.LENGTH_SHORT).show()
             }
             true
         }
-
-        // 为 ListPreference 设置自动摘要
-        val startupActionPreference: ListPreference? = findPreference("startup_action")
-        startupActionPreference?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
-
-        val autosaveFrequencyPreference: ListPreference? = findPreference("autosave_frequency")
-        autosaveFrequencyPreference?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
     }
 }

@@ -1,117 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- 1. 通用设置 -->
-    <PreferenceCategory app:title="通用设置">
+    <!-- 1. 外观与语言 -->
+    <PreferenceCategory
+        android:title="外观与语言">
 
         <ListPreference
-            app:key="theme"
-            app:title="界面/主题选择"
-            app:summary="%s"
-            app:defaultValue="system"
+            android:key="theme"
+            android:title="主题模式"
+            android:summary="浅色 / 深色 / 跟随系统"
+            android:defaultValue="system"
             app:entries="@array/theme_entries"
             app:entryValues="@array/theme_values" />
 
         <ListPreference
-            app:key="language"
-            app:title="语言设置"
-            app:summary="%s"
-            app:defaultValue="system"
+            android:key="language"
+            android:title="语言"
+            android:summary="切换应用显示语言"
+            android:defaultValue="system"
             app:entries="@array/language_entries"
             app:entryValues="@array/language_values" />
 
-        <SwitchPreferenceCompat
-            app:key="notifications"
-            app:title="通知管理"
-            app:summaryOn="已开启"
-            app:summaryOff="已关闭"
-            app:defaultValue="true" />
+    </PreferenceCategory>
 
-        <ListPreference
-            app:key="startup_action"
-            app:title="启动设置"
-            app:summary="%s"
-            app:defaultValue="home"
-            app:entries="@array/startup_action_entries"
-            app:entryValues="@array/startup_action_values" />
+    <!-- 2. 通知与缓存 -->
+    <PreferenceCategory
+        android:title="通知与缓存">
+
+        <Preference
+            android:key="notifications"
+            android:title="通知管理"
+            android:summary="跳转到系统通知设置" />
+
+        <Preference
+            android:key="clear_cache"
+            android:title="清理缓存"
+            android:summary="清理临时文件，释放存储空间" />
 
     </PreferenceCategory>
 
-    <!-- 2. 编辑与性能配置 -->
-    <PreferenceCategory app:title="编辑与性能配置">
-
-        <Preference
-            app:key="export_settings"
-            app:title="默认导出设置"
-            app:summary="格式、质量、分辨率" />
+    <!-- 3. 编辑偏好 -->
+    <PreferenceCategory
+        android:title="编辑偏好">
 
         <EditTextPreference
-            app:key="history_depth"
-            app:title="历史记录深度"
-            app:summary="当前: %s 步"
-            app:defaultValue="50"
-            app:dialogTitle="设置撤销步数" />
-
-        <SwitchPreferenceCompat
-            app:key="non_destructive_editing"
-            app:title="非破坏性编辑"
-            app:summary="所有修改将作为独立步骤存储"
-            app:defaultValue="true" />
-
-        <SwitchPreferenceCompat
-            app:key="watermark"
-            app:title="显示水印"
-            app:defaultValue="false" />
+            android:key="history_depth"
+            android:title="历史记录深度"
+            android:defaultValue="50"
+            android:dialogTitle="设置撤销步数"
+            android:summary="当前：50 步" />
 
     </PreferenceCategory>
 
-    <!-- 3. 数据与存储管理 -->
-    <PreferenceCategory app:title="数据与存储管理">
+    <!-- 4. 关于与隐私 -->
+    <PreferenceCategory
+        android:title="关于与隐私">
 
         <Preference
-            app:key="storage_path"
-            app:title="本地存储路径"
-            app:summary="/storage/emulated/0/Pictures/MyApp" />
+            android:key="privacy_policy"
+            android:title="隐私政策"
+            android:summary="查看隐私政策网页" />
 
         <Preference
-            app:key="clear_cache"
-            app:title="清理缓存"
-            app:summary="当前缓存: 128 MB" />
-
-        <ListPreference
-            app:key="autosave_frequency"
-            app:title="草稿自动保存频率"
-            app:summary="%s"
-            app:defaultValue="5"
-            app:entries="@array/autosave_entries"
-            app:entryValues="@array/autosave_values" />
-
-    </PreferenceCategory>
-
-    <!-- 4. 账户与隐私 -->
-    <PreferenceCategory app:title="账户与隐私">
-
-        <Preference
-            app:key="edit_profile"
-            app:title="编辑个人信息" />
-
-        <Preference
-            app:key="change_password"
-            app:title="修改密码" />
-
-        <Preference
-            app:key="privacy_policy"
-            app:title="隐私政策与协议" />
-
-        <Preference
-            app:key="about_us"
-            app:title="关于我们"
-            app:summary="版本 1.0.0" />
-
-        <Preference
-            app:key="logout"
-            app:title="退出登录" >
-        </Preference>
+            android:key="about_us"
+            android:title="关于应用"
+            android:summary="版本 1.0.0 · 醒图安卓训练营" />
 
     </PreferenceCategory>
 
