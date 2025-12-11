@@ -19,6 +19,10 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.slider.Slider
+import com.google.android.material.textfield.TextInputEditText
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -186,11 +190,17 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             enterFilterMode()
         }
         
-        // 灰度按钮
         // 调整按钮
         findViewById<LinearLayout>(R.id.adjust_button).setOnClickListener {
             enterAdjustmentMode()
         }
+        
+        // 旋转按钮
+        findViewById<LinearLayout>(R.id.rotate_button).setOnClickListener {
+            showRotateDialog()
+        }
+        
+        // 灰度按钮（隐藏）
         findViewById<Button>(R.id.grayscale_button).setOnClickListener {
             renderer.isGrayscaleEnabled = !renderer.isGrayscaleEnabled
             glSurfaceView.requestRender()
@@ -295,6 +305,89 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         // 应用滤镜后退出滤镜模式
         exitFilterMode()
         Toast.makeText(this, "已应用${filter.displayName}滤镜", Toast.LENGTH_SHORT).show()
+    }
+    
+    /**
+     * 显示旋转角度对话框
+     */
+    private fun showRotateDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_rotate_angle, null)
+        val angleInput = dialogView.findViewById<TextInputEditText>(R.id.angle_input)
+        val angleSlider = dialogView.findViewById<Slider>(R.id.angle_slider)
+        val chip90Ccw = dialogView.findViewById<Chip>(R.id.chip_90_ccw)
+        val chip90Cw = dialogView.findViewById<Chip>(R.id.chip_90_cw)
+        val chip180 = dialogView.findViewById<Chip>(R.id.chip_180)
+        val chipCustom = dialogView.findViewById<Chip>(R.id.chip_custom)
+        
+        // 设置当前旋转角度
+        val currentAngle = renderer.getRotation()
+        angleInput.setText(currentAngle.toInt().toString())
+        angleSlider.value = currentAngle.coerceIn(-180f, 180f)
+        
+        // 滑动条变化时更新输入框
+        angleSlider.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                angleInput.setText(value.toInt().toString())
+            }
+        }
+        
+        // 输入框变化时更新滑动条
+        angleInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val text = angleInput.text?.toString() ?: "0"
+                val angle = text.toFloatOrNull() ?: 0f
+                val clampedAngle = angle.coerceIn(-180f, 180f)
+                angleSlider.value = clampedAngle
+            }
+        }
+        
+        // 快捷按钮点击事件
+        chip90Ccw.setOnClickListener {
+            angleInput.setText("-90")
+            angleSlider.value = -90f
+        }
+        
+        chip90Cw.setOnClickListener {
+            angleInput.setText("90")
+            angleSlider.value = 90f
+        }
+        
+        chip180.setOnClickListener {
+            angleInput.setText("180")
+            angleSlider.value = 180f
+        }
+        
+        chipCustom.setOnClickListener {
+            angleInput.requestFocus()
+            angleInput.selectAll()
+        }
+        
+        MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setPositiveButton("应用") { _, _ ->
+                val text = angleInput.text?.toString() ?: "0"
+                val angle = text.toFloatOrNull() ?: 0f
+                applyRotation(angle)
+            }
+            .setNegativeButton("取消", null)
+            .setNeutralButton("重置") { _, _ ->
+                applyRotation(0f)
+            }
+            .show()
+    }
+    
+    /**
+     * 应用旋转角度
+     */
+    private fun applyRotation(angle: Float) {
+        // 保存当前状态到历史记录
+        saveCurrentStateToHistory()
+        
+        renderer.setRotation(angle)
+        glSurfaceView.requestRender()
+        autoSaveDraft()
+        
+        Toast.makeText(this, "已旋转 ${angle.toInt()}°", Toast.LENGTH_SHORT).show()
     }
     /**
      * 设置调整RecyclerView

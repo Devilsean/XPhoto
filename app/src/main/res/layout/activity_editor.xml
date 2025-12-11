@@ -484,9 +484,9 @@
                     android:textSize="11sp" />
             </LinearLayout>
 
-            <!-- 美颜工具 -->
+            <!-- 旋转工具 -->
             <LinearLayout
-                android:id="@+id/beauty_button"
+                android:id="@+id/rotate_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -500,15 +500,15 @@
                 <ImageView
                     android:layout_width="28dp"
                     android:layout_height="28dp"
-                    android:src="@drawable/ic_beauty_vector"
+                    android:src="@drawable/ic_rotate"
                     app:tint="@color/white"
-                    android:contentDescription="美颜" />
+                    android:contentDescription="旋转" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="美颜"
+                    android:text="旋转"
                     android:textColor="@color/white"
                     android:textSize="11sp" />
             </LinearLayout>

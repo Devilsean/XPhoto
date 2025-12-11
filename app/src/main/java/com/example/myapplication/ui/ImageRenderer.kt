@@ -49,6 +49,10 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     @Volatile
     var currentFilter: FilterType = FilterType.NONE
     
+    // 旋转角度（度数）
+    @Volatile
+    var rotationAngle: Float = 0f
+    
     // 调整参数
     @Volatile
     var adjustmentParams: AdjustmentParams = AdjustmentParams()
@@ -112,6 +116,72 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
      */
     fun getImageHeight(): Int {
         return imageHeight
+    }
+    
+    // 视口尺寸（用于旋转缩放计算）
+    private var viewportWidth: Int = 0
+    private var viewportHeight: Int = 0
+    
+    /**
+     * 设置旋转角度
+     * @param angle 旋转角度（度数），正值为顺时针，负值为逆时针
+     */
+    fun setRotation(angle: Float) {
+        rotationAngle = angle
+    }
+    
+    /**
+     * 获取当前旋转角度
+     */
+    fun getRotation(): Float {
+        return rotationAngle
+    }
+    
+    /**
+     * 计算旋转后需要的缩放因子，以确保图片完整显示不被裁剪
+     * 当图片旋转时，其边界框会变大，需要缩小图片以适应视口
+     */
+    private fun calculateRotationScaleFactor(): Float {
+        if (imageWidth <= 0 || imageHeight <= 0 || viewportWidth <= 0 || viewportHeight <= 0) {
+            return 1.0f
+        }
+        
+        // 将角度转换为弧度
+        val angleRad = Math.toRadians(rotationAngle.toDouble())
+        val cosAngle = kotlin.math.abs(kotlin.math.cos(angleRad)).toFloat()
+        val sinAngle = kotlin.math.abs(kotlin.math.sin(angleRad)).toFloat()
+        
+        // 计算图片的宽高比和视口宽高比
+        val imageRatio = imageWidth.toFloat() / imageHeight.toFloat()
+        val viewportRatio = viewportWidth.toFloat() / viewportHeight.toFloat()
+        
+        // 首先确定原始图片在视口中的显示尺寸（归一化坐标）
+        // 这与 onSurfaceChanged 中的逻辑一致
+        val originalDisplayWidth: Float
+        val originalDisplayHeight: Float
+        if (viewportRatio > imageRatio) {
+            // 视口更宽，图片高度填满，宽度按比例缩小
+            originalDisplayHeight = 2.0f  // 从 -1 到 1
+            originalDisplayWidth = 2.0f * imageRatio / viewportRatio
+        } else {
+            // 视口更高，图片宽度填满，高度按比例缩小
+            originalDisplayWidth = 2.0f  // 从 -1 到 1
+            originalDisplayHeight = 2.0f * viewportRatio / imageRatio
+        }
+        
+        // 计算旋转后图片的边界框尺寸
+        // 旋转后的宽度 = |cos(θ)| * 原宽度 + |sin(θ)| * 原高度
+        // 旋转后的高度 = |sin(θ)| * 原宽度 + |cos(θ)| * 原高度
+        val rotatedWidth = cosAngle * originalDisplayWidth + sinAngle * originalDisplayHeight
+        val rotatedHeight = sinAngle * originalDisplayWidth + cosAngle * originalDisplayHeight
+        
+        // 计算需要的缩放因子，使旋转后的边界框适应原始显示区域
+        // 需要同时考虑宽度和高度的约束
+        val scaleX = originalDisplayWidth / rotatedWidth
+        val scaleY = originalDisplayHeight / rotatedHeight
+        
+        // 取较小值以确保完整显示（不超出原始显示区域）
+        return minOf(scaleX, scaleY)
     }
     
     /**
@@ -284,6 +354,9 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0,0,width,height)
+        // 保存视口尺寸用于旋转缩放计算
+        viewportWidth = width
+        viewportHeight = height
         if(imageWidth==0||imageHeight==0||width==0||height==0)return
         val screenRatio=width.toFloat()/height.toFloat()
         val imageRatio=imageWidth.toFloat()/imageHeight.toFloat()
@@ -336,8 +409,14 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         
         // 4. 设置变换矩阵
         Matrix.setIdentityM(transformMatrix,0)
-        Matrix.scaleM(transformMatrix,0,scaleFactor,scaleFactor,1.0f)
+        
+        // 计算旋转后需要的缩放调整（保持图片完整显示，不拉伸）
+        val rotationScaleFactor = calculateRotationScaleFactor()
+        
+        Matrix.scaleM(transformMatrix,0,scaleFactor * rotationScaleFactor,scaleFactor * rotationScaleFactor,1.0f)
         Matrix.translateM(transformMatrix,0,offsetX,offsetY,0.0f)
+        // 应用旋转（绕Z轴旋转）
+        Matrix.rotateM(transformMatrix, 0, rotationAngle, 0f, 0f, 1f)
 
         // 2. 获取着色器中变量的句柄
         val positionHandle=GLES20.glGetAttribLocation(programId,"a_Position")

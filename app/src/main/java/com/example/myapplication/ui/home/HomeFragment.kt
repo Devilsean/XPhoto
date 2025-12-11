@@ -183,7 +183,7 @@ class HomeFragment : Fragment() {
         try {
             val quickAccessRecyclerView: RecyclerView = view.findViewById(R.id.quick_access_recycler_view)
             quickAccessRecyclerView.layoutManager = GridLayoutManager(context, 4)
-            val quickAccessItems = listOf("滤镜", "裁剪", "拼图", "美颜", "文字", "贴纸", "画笔", "全部")
+            val quickAccessItems = listOf("滤镜", "裁剪", "拼图", "旋转", "文字", "贴纸", "画笔", "全部")
             quickAccessRecyclerView.adapter = SimpleTextAdapter(quickAccessItems)
             Log.d(TAG, "常用功能网格设置完成")
         } catch (e: Exception) {
