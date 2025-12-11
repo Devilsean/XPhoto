@@ -103,6 +103,27 @@
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+<!--滤镜选择器 -滤镜模式专用 -->
+    <HorizontalScrollView
+        android:id="@+id/filter_scroll"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/bottom_toolbar_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"><androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/filter_recycler_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+    </HorizontalScrollView>
 
     <!-- 比例选择器 -裁剪模式专用 -->
     <HorizontalScrollView

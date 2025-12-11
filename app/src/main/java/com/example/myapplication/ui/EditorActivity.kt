@@ -14,6 +14,8 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -53,6 +55,12 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     private lateinit var editorButtonCard: MaterialCardView
     private lateinit var cropActionCard: MaterialCardView
     private lateinit var aspectRatioScroll: HorizontalScrollView
+    
+    // 滤镜相关
+    private lateinit var filterScroll: HorizontalScrollView
+    private lateinit var filterRecyclerView: RecyclerView
+    private lateinit var filterAdapter: FilterAdapter
+    private var isFilterMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,6 +91,8 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         editorButtonCard = findViewById(R.id.bottom_toolbar_card)
         cropActionCard = findViewById(R.id.crop_action_card)
         aspectRatioScroll = findViewById(R.id.aspect_ratio_scroll)
+        filterScroll = findViewById(R.id.filter_scroll)
+        filterRecyclerView = findViewById(R.id.filter_recycler_view)
         
         // 初始化 OpenGL
         try {
@@ -107,6 +117,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         scaleGestureDetector = ScaleGestureDetector(this, ScaleListener())
         
         setupButtons()
+        setupFilterRecyclerView()
         
         // 手动保存草稿按钮（可选）
         // findViewById<Button>(R.id.save_draft_button).setOnClickListener {
@@ -139,6 +150,11 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         // 裁剪按钮（LinearLayout）
         findViewById<LinearLayout>(R.id.crop_button).setOnClickListener {
             enterCropMode()
+        }
+        
+        // 滤镜按钮
+        findViewById<LinearLayout>(R.id.filter_button).setOnClickListener {
+            enterFilterMode()
         }
         
         // 灰度按钮
@@ -193,6 +209,58 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         findViewById<com.google.android.material.chip.Chip>(R.id.ratio_16_9).setOnClickListener {
             cropOverlayView.setAspectRatio(CropOverlayView.AspectRatio.RATIO_16_9)
         }
+    }
+    
+    /**
+     * 设置滤镜RecyclerView
+     */
+    private fun setupFilterRecyclerView() {
+        filterRecyclerView.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        
+        // 创建滤镜列表
+        val filters = FilterType.values().toList()
+        
+        // 创建适配器
+        filterAdapter = FilterAdapter(filters, null) { selectedFilter ->
+            applyFilter(selectedFilter)
+        }
+        
+        filterRecyclerView.adapter = filterAdapter
+    }
+    
+    /**
+     * 进入滤镜模式
+     */
+    private fun enterFilterMode() {
+        isFilterMode = true
+        filterScroll.visibility = View.VISIBLE
+        editorButtonCard.visibility = View.GONE
+    }
+    
+    /**
+     * 退出滤镜模式
+     */
+    private fun exitFilterMode() {
+        isFilterMode = false
+        filterScroll.visibility = View.GONE
+        editorButtonCard.visibility = View.VISIBLE
+    }
+    
+    /**
+     * 应用滤镜
+     */
+    private fun applyFilter(filter: FilterType) {
+        renderer.currentFilter = filter
+        glSurfaceView.requestRender()
+        autoSaveDraft()
+        
+        // 应用滤镜后退出滤镜模式
+        exitFilterMode()
+        Toast.makeText(this, "已应用${filter.displayName}滤镜", Toast.LENGTH_SHORT).show()
     }
     
     /**
@@ -264,10 +332,22 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         lifecycleScope.launch {
             try {
                 val draft = draftRepository.getDraftById(draftId)
-                if (draft != null) {
-                    //恢复编辑状态
-                    renderer.isGrayscaleEnabled = draft.isGrayscaleEnabled
-                    renderer.scaleFactor = draft.scaleFactor
+            if (draft != null) {
+                //恢复编辑状态
+                renderer.isGrayscaleEnabled = draft.isGrayscaleEnabled
+                
+                // 恢复滤镜
+                draft.filterType?.let { filterTypeName ->
+                    try {
+                        val filterType = FilterType.valueOf(filterTypeName)
+                        renderer.currentFilter = filterType
+                        filterAdapter.setSelectedFilter(filterType)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                
+                renderer.scaleFactor = draft.scaleFactor
                     renderer.offsetX = draft.offsetX
                     renderer.offsetY = draft.offsetY
                     
@@ -305,6 +385,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     id = currentDraftId ?: 0,  // 如果是新草稿，id为0
                     originalImageUri = originalImageUri!!,
                     isGrayscaleEnabled = renderer.isGrayscaleEnabled,
+                    filterType = renderer.currentFilter.name,
                     scaleFactor = renderer.scaleFactor,
                     offsetX = renderer.offsetX,
                     offsetY = renderer.offsetY,
@@ -341,6 +422,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     id = currentDraftId ?: 0,
                     originalImageUri = originalImageUri!!,
                     isGrayscaleEnabled = renderer.isGrayscaleEnabled,
+                    filterType = renderer.currentFilter.name,
                     scaleFactor = renderer.scaleFactor,
                     offsetX = renderer.offsetX,
                     offsetY = renderer.offsetY,
@@ -396,8 +478,8 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        //裁剪模式下不处理图片的缩放和移动
-        if (isCropMode) {
+        //裁剪模式或滤镜模式下不处理图片的缩放和移动
+        if (isCropMode || isFilterMode) {
             return super.onTouchEvent(event)
         }
         

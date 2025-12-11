@@ -46,6 +46,8 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     var offsetY=0.0f
     @Volatile
     var isGrayscaleEnabled=false
+    @Volatile
+    var currentFilter: FilterType = FilterType.NONE
 
     private var screenshotListener:ScreenshotListener?=null
     private var captureNextFrame=false
@@ -167,7 +169,7 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
-    // 3. 定义顶点着色器和片段着色器
+    // 3. 定义顶点着色器
     private val vertexShaderCode="""
         uniform mat4 u_TransformMatrix;
         attribute vec4 a_Position;
@@ -178,21 +180,9 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
             v_TexCoord=a_TexCoord;
         }
     """
-    private val fragmentShaderCode="""
-        precision mediump float;
-        varying vec2 v_TexCoord;
-        uniform sampler2D u_Texture;
-        uniform int u_GrayscaleEnabled;
-        void main(){
-            vec4 color =texture2D(u_Texture,v_TexCoord);
-            if(u_GrayscaleEnabled==1){
-                float gray=0.299*color.r+0.587*color.g+0.114*color.b;
-                gl_FragColor=vec4(gray,gray,gray,1.0);
-            }else{
-                gl_FragColor=color;
-            }
-        }
-    """
+    
+    // 存储所有滤镜的程序ID
+    private val filterPrograms = mutableMapOf<FilterType, Int>()
     private var programId:Int=0
     private var textureId:Int=0
     private var transformMatrixHandle:Int=0
@@ -202,18 +192,25 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     // 4. 在onSurfaceCreated中加载OpenGL程序和纹理
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0.0f,0.0f,0.0f,1.0f)
+        
+        // 为每个滤镜创建着色器程序
         val vertexShader=loadShader(GLES20.GL_VERTEX_SHADER,vertexShaderCode)
-        val fragmentShader=loadShader(GLES20.GL_FRAGMENT_SHADER,fragmentShaderCode)
-        programId=GLES20.glCreateProgram().also{
-            GLES20.glAttachShader(it,vertexShader)
-            GLES20.glAttachShader(it,fragmentShader)
-            GLES20.glLinkProgram(it)
+        FilterType.values().forEach { filter ->
+            val fragmentShader=loadShader(GLES20.GL_FRAGMENT_SHADER, filter.fragmentShader)
+            val program = GLES20.glCreateProgram().also{
+                GLES20.glAttachShader(it,vertexShader)
+                GLES20.glAttachShader(it,fragmentShader)
+                GLES20.glLinkProgram(it)
+            }
+            filterPrograms[filter] = program
         }
+        
+        // 设置默认程序
+        programId = filterPrograms[FilterType.NONE] ?: 0
         
         try {
             textureId=loadTexture(context,imageUri)
             transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
-            grayscaleEnabledHandle=GLES20.glGetUniformLocation(programId,"u_GrayscaleEnabled")
             
             // 保存原始 bitmap 用于裁剪
             originalBitmap = context.contentResolver.openInputStream(imageUri)?.use {
@@ -270,10 +267,18 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         }
         
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        // 1. 使用我们的OpenGL程序
+        
+        // 1. 根据当前滤镜选择程序（兼容旧的灰度模式）
+        val activeFilter = if (isGrayscaleEnabled) FilterType.GRAYSCALE else currentFilter
+        programId = filterPrograms[activeFilter] ?: filterPrograms[FilterType.NONE] ?: 0
+        
+        // 2. 使用选定的OpenGL程序
         GLES20.glUseProgram(programId)
-        GLES20.glUniform1i(grayscaleEnabledHandle,if(isGrayscaleEnabled)1 else 0)
-        // 2. 设置变换矩阵
+        
+        // 3. 更新变换矩阵句柄（每次可能使用不同的程序）
+        transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
+        
+        // 4. 设置变换矩阵
         Matrix.setIdentityM(transformMatrix,0)
         Matrix.scaleM(transformMatrix,0,scaleFactor,scaleFactor,1.0f)
         Matrix.translateM(transformMatrix,0,offsetX,offsetY,0.0f)
