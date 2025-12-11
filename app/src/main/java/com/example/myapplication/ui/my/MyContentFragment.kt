@@ -37,7 +37,7 @@ class MyContentFragment : Fragment() {
         // 根据contentType显示不同的数据
         when (contentType) {
             "作品" -> {
-                recyclerView.layoutManager = GridLayoutManager(context, 2)  // 改为2列
+                recyclerView.layoutManager = GridLayoutManager(context, 3)
                 val editedImageRepository = app.editedImageRepository
                 viewLifecycleOwner.lifecycleScope.launch {
                     editedImageRepository.allEditedImages.collect { images ->
@@ -49,10 +49,16 @@ class MyContentFragment : Fragment() {
                                 ): RecyclerView.ViewHolder {
                                     val itemView = LayoutInflater.from(parent.context)
                                         .inflate(R.layout.item_draft, parent, false)
-                                    itemView.layoutParams = ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        400
-                                    )
+                                    
+                                    // 设置固定4:3比例的高度
+                                    val displayMetrics = parent.context.resources.displayMetrics
+                                    val screenWidth = displayMetrics.widthPixels
+                                    val itemWidth = screenWidth / 3
+                                    val itemHeight = (itemWidth * 4 / 3f).toInt()
+                                    
+                                    val imageView = itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
+                                    imageView.layoutParams.height = itemHeight
+                                    
                                     return object : RecyclerView.ViewHolder(itemView) {}
                                 }
 
@@ -88,7 +94,7 @@ class MyContentFragment : Fragment() {
             }
 
             "草稿" -> {
-                recyclerView.layoutManager = GridLayoutManager(context, 2)  // 改为2列
+                recyclerView.layoutManager = GridLayoutManager(context, 3)
                 val draftRepository = app.draftRepository
                 viewLifecycleOwner.lifecycleScope.launch {
                     draftRepository.allDrafts.collect { drafts ->
@@ -100,11 +106,16 @@ class MyContentFragment : Fragment() {
                                 ): RecyclerView.ViewHolder {
                                     val itemView = LayoutInflater.from(parent.context)
                                         .inflate(R.layout.item_draft, parent, false)
-                                    // 调整item_draft的宽度以适应2列布局
-                                    itemView.layoutParams = ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        400  // 设置固定高度
-                                    )
+                                    
+                                    // 设置固定4:3比例的高度
+                                    val displayMetrics = parent.context.resources.displayMetrics
+                                    val screenWidth = displayMetrics.widthPixels
+                                    val itemWidth = screenWidth / 3
+                                    val itemHeight = (itemWidth * 4 / 3f).toInt()
+
+                                    val imageView = itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
+                                    imageView.layoutParams.height = itemHeight
+                                    
                                     return object : RecyclerView.ViewHolder(itemView) {}
                                 }
 

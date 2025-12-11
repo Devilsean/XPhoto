@@ -107,10 +107,8 @@ class HomeFragment : Fragment() {
         // --- 1. 设置轮播图 ---
         val viewPager: ViewPager2 = view.findViewById(R.id.carousel_view_pager)
         val carouselItems = listOf(
-            R.drawable.ic_launcher_background,
-            R.drawable.ic_launcher_foreground,
-            R.drawable.ic_launcher_background,
-            R.drawable.ic_launcher_foreground
+            R.drawable.banner3,
+            R.drawable.banner4,
         )
         viewPager.adapter = CarouselAdapter(carouselItems)
         // --- 2. 设置核心操作点击事件 ---
@@ -181,6 +179,17 @@ class HomeFragment : Fragment() {
                         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
                             val itemView = LayoutInflater.from(parent.context)
                                 .inflate(R.layout.item_draft, parent, false)
+
+                            // 设置固定宽度和4:3比例的高度(横向滚动)
+                            val itemWidth = 120  // dp
+                            val density = parent.context.resources.displayMetrics.density
+                            val widthPx = (itemWidth * density).toInt()
+                            val heightPx = (widthPx * 4 / 3f).toInt()
+
+                            itemView.layoutParams.width = widthPx
+                            val imageView = itemView.findViewById<android.widget.ImageView>(R.id.iv_draft_preview)
+                            imageView.layoutParams.height = heightPx
+
                             return object : RecyclerView.ViewHolder(itemView) {}
                         }
         
