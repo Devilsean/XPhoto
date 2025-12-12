@@ -60,10 +60,10 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
-                <com.google.android.material.imageview.ShapeableImageView
+                <com.example.myapplication.ui.widget.RainbowBorderImageView
                     android:id="@+id/avatar_view"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_user"
                     app:shapeAppearanceOverlay="@style/CircleImageView"
