@@ -22,3 +22,8 @@ Thumbs.db
 
 # Kotlin
 .kotlin/
+
+# Logs (root & anywhere)
+*.log
+hs_err_pid*
+replay_pid*
