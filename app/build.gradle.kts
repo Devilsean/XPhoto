@@ -65,3 +65,33 @@ dependencies {
 
 
 }
+
+// 定义清除缓存的 Task
+tasks.register("cleanCacheDir") {
+    group = "cache"
+    description = "Clears specific build cache directories."
+    
+    doLast {
+        // 指定要清除的缓存目录
+        val cacheDirs = listOf(
+            file("${project.buildDir}/intermediates/transforms"),
+            file("${project.buildDir}/tmp"),
+            // 添加更多需要清除的目录
+        )
+        
+        cacheDirs.forEach { dir ->
+            if (dir.exists()) {
+                println("Clearing cache directory: ${dir.absolutePath}")
+                dir.deleteRecursively()
+                println("Cache directory cleared: ${dir.absolutePath}")
+            } else {
+                println("Cache directory does not exist, skipping: ${dir.absolutePath}")
+            }
+        }
+    }
+}
+
+// 让 preBuild 任务依赖于 cleanCacheDir，确保编译前执行清除
+tasks.named("preBuild") {
+    dependsOn("cleanCacheDir")
+}
