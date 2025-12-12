@@ -51,20 +51,7 @@
 
     </PreferenceCategory>
 
-    <!-- 3. 编辑偏好 -->
-    <PreferenceCategory
-        android:title="编辑偏好">
-
-        <EditTextPreference
-            android:key="history_depth"
-            android:title="历史记录深度"
-            android:defaultValue="50"
-            android:dialogTitle="设置撤销步数"
-            android:summary="当前：50 步" />
-
-    </PreferenceCategory>
-
-    <!-- 4. 关于与隐私 -->
+    <!-- 3. 关于与隐私 -->
     <PreferenceCategory
         android:title="关于与隐私">
 

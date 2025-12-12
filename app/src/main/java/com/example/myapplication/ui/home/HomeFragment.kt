@@ -1,16 +1,21 @@
 package com.example.myapplication.ui.home
 
 import android.content.Intent
+import android.graphics.LinearGradient
+import android.graphics.Shader
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -177,6 +182,61 @@ class HomeFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e(TAG, "打开相册失败", e)
             }
+        }
+
+        // --- 设置相册图标渐变色 ---
+        try {
+            val albumIcon: ImageView? = view.findViewById(R.id.iv_album_icon)
+            albumIcon?.let { imageView ->
+                // 获取渐变色的起始和结束颜色
+                val startColor = ContextCompat.getColor(requireContext(), R.color.splash_bg_blue)
+                val endColor = ContextCompat.getColor(requireContext(), R.color.splash_bg_pink)
+                
+                // 使用 post 确保视图已经测量完成
+                imageView.post {
+                    val width = imageView.width.toFloat()
+                    val height = imageView.height.toFloat()
+                    
+                    if (width > 0 && height > 0) {
+                        // 创建线性渐变着色器（135度角，从左上到右下）
+                        val shader = LinearGradient(
+                            0f, 0f,           // 起始点
+                            width, height,    // 结束点（对角线方向）
+                            startColor,
+                            endColor,
+                            Shader.TileMode.CLAMP
+                        )
+                        
+                        // 获取 drawable 并应用渐变着色
+                        imageView.drawable?.let { drawable ->
+                            val mutableDrawable = drawable.mutate()
+                            // 使用自定义 Paint 绘制带渐变的图标
+                            val paint = android.graphics.Paint().apply {
+                                this.shader = shader
+                            }
+                            
+                            // 创建带渐变的 Bitmap
+                            val bitmap = android.graphics.Bitmap.createBitmap(
+                                width.toInt(), height.toInt(), android.graphics.Bitmap.Config.ARGB_8888
+                            )
+                            val canvas = android.graphics.Canvas(bitmap)
+                            
+                            // 先绘制原始图标
+                            mutableDrawable.setBounds(0, 0, width.toInt(), height.toInt())
+                            mutableDrawable.draw(canvas)
+                            
+                            // 使用 SRC_IN 模式应用渐变
+                            paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN)
+                            canvas.drawRect(0f, 0f, width, height, paint)
+                            
+                            // 设置新的 Bitmap 作为图标
+                            imageView.setImageBitmap(bitmap)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "设置相册图标渐变色失败", e)
         }
 
         // --- 3. 设置常用功能网格 ---

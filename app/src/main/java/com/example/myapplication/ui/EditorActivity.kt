@@ -136,6 +136,11 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             if (currentDraftId != null) {
                 loadDraft(currentDraftId!!)
             }
+            
+            // 延迟保存初始状态，确保renderer已完全初始化
+            glSurfaceView.post {
+                saveInitialState()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "加载图片失败: ${e.message}", Toast.LENGTH_LONG).show()
@@ -299,6 +304,9 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
      * 应用滤镜
      */
     private fun applyFilter(filter: FilterType) {
+        // 保存当前状态到历史记录（在修改之前）
+        saveCurrentStateToHistory()
+        
         renderer.currentFilter = filter
         glSurfaceView.requestRender()
         autoSaveDraft()
@@ -374,9 +382,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         isAdjustmentMode = true
         adjustmentPanelCard.visibility = View.VISIBLE
         editorButtonCard.visibility = View.GONE
-        
-        // 保存当前状态到历史记录
-        saveCurrentStateToHistory()
+        // 注意：不在进入模式时保存状态，而是在实际修改参数时保存
     }
     
     /**
@@ -386,12 +392,27 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         isAdjustmentMode = false
         adjustmentPanelCard.visibility = View.GONE
         editorButtonCard.visibility = View.VISIBLE
+        
+        // 重置防抖状态
+        pendingHistorySave = false
+        lastAdjustmentSaveTime = System.currentTimeMillis()
     }
+    
+    // 用于防抖的变量
+    private var lastAdjustmentSaveTime = 0L
+    private var pendingHistorySave = false
     
     /**
      * 调整参数改变时的回调
      */
     private fun onAdjustmentChanged(adjustmentType: AdjustmentType, value: Float) {
+        // 在第一次修改时保存历史状态（防抖处理）
+        val currentTime = System.currentTimeMillis()
+        if (!pendingHistorySave && currentTime - lastAdjustmentSaveTime > 500) {
+            saveCurrentStateToHistory()
+            pendingHistorySave = true
+        }
+        
         // 更新参数
         adjustmentType.setValue(renderer.adjustmentParams, value)
         
@@ -414,6 +435,27 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     }
     
     /**
+     * 保存初始状态到历史记录
+     */
+    private fun saveInitialState() {
+        val initialState = EditState(
+            adjustmentParams = renderer.adjustmentParams.copy(),
+            scaleFactor = renderer.scaleFactor,
+            offsetX = renderer.offsetX,
+            offsetY = renderer.offsetY,
+            rotationAngle = renderer.getRotation(),
+            cropRect = renderer.getCropRect(),
+            isGrayscaleEnabled = renderer.isGrayscaleEnabled,
+            filterType = renderer.currentFilter,
+            bitmapHistoryIndex = renderer.getBitmapHistoryIndex(),
+            imageWidth = renderer.getImageWidth(),
+            imageHeight = renderer.getImageHeight()
+        )
+        editHistory.addState(initialState)
+        updateUndoRedoButtons()
+    }
+    
+    /**
      * 保存当前状态到历史记录
      */
     private fun saveCurrentStateToHistory() {
@@ -425,7 +467,10 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             rotationAngle = renderer.getRotation(),
             cropRect = renderer.getCropRect(),
             isGrayscaleEnabled = renderer.isGrayscaleEnabled,
-            filterType = renderer.currentFilter
+            filterType = renderer.currentFilter,
+            bitmapHistoryIndex = renderer.getBitmapHistoryIndex(),
+            imageWidth = renderer.getImageWidth(),
+            imageHeight = renderer.getImageHeight()
         )
         editHistory.addState(currentState)
         updateUndoRedoButtons()
@@ -465,6 +510,15 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
      * 恢复编辑状态
      */
     private fun restoreEditState(state: EditState) {
+        // 恢复bitmap历史（用于裁剪撤销）
+        if (state.bitmapHistoryIndex >= 0) {
+            val currentBitmapIndex = renderer.getBitmapHistoryIndex()
+            if (currentBitmapIndex != state.bitmapHistoryIndex) {
+                // bitmap索引不同，需要恢复bitmap
+                renderer.restoreBitmapHistory(state.bitmapHistoryIndex)
+            }
+        }
+        
         // 恢复调整参数
         renderer.adjustmentParams = state.adjustmentParams.copy()
         adjustmentAdapter.updateValues()
@@ -477,12 +531,15 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         // 恢复旋转角度
         renderer.setRotation(state.rotationAngle)
         
-        // 恢复裁剪
-        state.cropRect?.let { renderer.setCropRect(it) }
+        // 清除裁剪区域（裁剪已经通过bitmap历史恢复了）
+        renderer.clearCropRect()
         
         // 恢复滤镜
         renderer.isGrayscaleEnabled = state.isGrayscaleEnabled
         renderer.currentFilter = state.filterType
+        
+        // 更新滤镜选择状态
+        filterAdapter.setSelectedFilter(state.filterType)
         
         // 重新渲染
         glSurfaceView.requestRender()
@@ -536,6 +593,9 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             return
         }
         
+        // 保存当前状态到历史记录（在修改之前）
+        saveCurrentStateToHistory()
+        
         // 将裁剪框坐标转换为相对于图片显示区域的归一化坐标(0-1)
         val normalizedRect = android.graphics.RectF(
             (cropRect.left - imageDisplayRect.left) / imageDisplayRect.width(),
@@ -554,11 +614,40 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         renderer.setCropRect(normalizedRect)
         glSurfaceView.requestRender()
         
+        // 延迟保存裁剪后的状态，确保裁剪操作已在GL线程中完成
+        // 这样可以正确记录裁剪后的bitmapHistoryIndex
+        glSurfaceView.queueEvent {
+            // 在GL线程中等待裁剪完成后，回到主线程保存状态
+            glSurfaceView.post {
+                saveCropStateToHistory()
+                autoSaveDraft()
+            }
+        }
+        
         exitCropMode()
         Toast.makeText(this, "裁剪已应用", Toast.LENGTH_SHORT).show()
-        
-        // 裁剪后自动保存草稿
-        autoSaveDraft()
+    }
+    
+    /**
+     * 保存裁剪后的状态到历史记录
+     * 这个方法在裁剪操作完成后调用，确保bitmapHistoryIndex是正确的
+     */
+    private fun saveCropStateToHistory() {
+        val currentState = EditState(
+            adjustmentParams = renderer.adjustmentParams.copy(),
+            scaleFactor = renderer.scaleFactor,
+            offsetX = renderer.offsetX,
+            offsetY = renderer.offsetY,
+            rotationAngle = renderer.getRotation(),
+            cropRect = null,  // 裁剪已应用，cropRect应为null
+            isGrayscaleEnabled = renderer.isGrayscaleEnabled,
+            filterType = renderer.currentFilter,
+            bitmapHistoryIndex = renderer.getBitmapHistoryIndex(),
+            imageWidth = renderer.getImageWidth(),
+            imageHeight = renderer.getImageHeight()
+        )
+        editHistory.addState(currentState)
+        updateUndoRedoButtons()
     }
     
     /**

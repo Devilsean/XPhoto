@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -111,31 +110,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        // 5. 历史记录深度
-        findPreference<EditTextPreference>("history_depth")?.apply {
-            // 初始化 summary（第一次打开时）
-            if (text.isNullOrBlank()) {
-                text = "50"
-            }
-            summary = "当前：${text} 步"
-
-            setOnPreferenceChangeListener { preference, newValue ->
-                val value = (newValue as? String)?.toIntOrNull()
-                if (value == null || value <= 0) {
-                    Toast.makeText(context, "请输入大于 0 的数字", Toast.LENGTH_SHORT).show()
-                    return@setOnPreferenceChangeListener false
-                }
-                preference.summary = "当前：$value 步"
-                true
-            }
-        }
-
-        // 6. 关于应用
+        // 5. 关于应用
         findPreference<Preference>("about_us")?.setOnPreferenceClickListener {
             context?.let { ctx ->
                 MaterialAlertDialogBuilder(ctx)
                     .setTitle("关于本应用")
-                    .setMessage("版本 1.0.0\n\n醒图安卓训练营 · 图片编辑 Demo 应用。\n\n主要功能：相册浏览、OpenGL 编辑画布、基础裁剪与导出。\n\n© 2025 Sean（部分功能在 AI 辅助下完成，并由本人理解与整合）")
+                    .setMessage("版本 1.0.0\n\n醒图安卓训练营 · 图片编辑 Demo 应用。\n\n主要功能：相册浏览、OpenGL 编辑画布、基础参数调节、裁剪、滤镜、旋转与导出。\n\n© 2025 Sean（部分功能在 AI 辅助下完成，并由本人理解与整合）")
                     .setPositiveButton("确定", null)
                     .show()
             }

@@ -54,6 +54,8 @@
                 android:paddingEnd="16dp"
                 android:paddingBottom="32dp"
                 android:paddingTop="80dp"
+                android:background="@drawable/splash_gradient_bg"
+                android:elevation="4dp"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">

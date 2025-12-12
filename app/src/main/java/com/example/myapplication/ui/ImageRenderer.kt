@@ -67,6 +67,11 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     private var pendingCrop = false
     private var originalBitmap: Bitmap? = null
     
+    // 裁剪历史栈（用于撤销）
+    private val bitmapHistory = mutableListOf<Bitmap>()
+    private var currentBitmapIndex = -1
+    private val maxBitmapHistory = 10  // 最多保存10个历史bitmap
+    
     // FBO相关（用于离屏渲染导出图片）
     private var fboId: Int = 0
     private var fboTextureId: Int = 0
@@ -103,6 +108,15 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         originalBitmap = null
         croppedBitmap?.recycle()
         croppedBitmap = null
+        
+        // 清理bitmap历史
+        for (bitmap in bitmapHistory) {
+            if (bitmap != originalBitmap) {
+                bitmap.recycle()
+            }
+        }
+        bitmapHistory.clear()
+        currentBitmapIndex = -1
     }
     
     /**
@@ -176,6 +190,78 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     }
     
     /**
+     * 清除裁剪区域
+     */
+    fun clearCropRect() {
+        cropRect = null
+    }
+    
+    /**
+     * 获取当前bitmap历史索引
+     */
+    fun getBitmapHistoryIndex(): Int {
+        return currentBitmapIndex
+    }
+    
+    /**
+     * 恢复到指定的bitmap历史状态
+     * @param index 历史索引
+     * @return 是否恢复成功
+     */
+    fun restoreBitmapHistory(index: Int): Boolean {
+        if (index < 0 || index >= bitmapHistory.size) {
+            return false
+        }
+        
+        currentBitmapIndex = index
+        val targetBitmap = bitmapHistory[index]
+        
+        // 更新当前使用的bitmap
+        croppedBitmap = targetBitmap
+        imageWidth = targetBitmap.width
+        imageHeight = targetBitmap.height
+        
+        // 需要在GL线程中重新加载纹理
+        pendingTextureReload = true
+        pendingReloadBitmap = targetBitmap
+        
+        return true
+    }
+    
+    // 待重新加载的纹理
+    private var pendingTextureReload = false
+    private var pendingReloadBitmap: Bitmap? = null
+    
+    /**
+     * 保存当前bitmap到历史
+     */
+    private fun saveBitmapToHistory(bitmap: Bitmap) {
+        // 如果当前不在历史末尾，删除当前位置之后的所有历史
+        if (currentBitmapIndex < bitmapHistory.size - 1) {
+            for (i in bitmapHistory.size - 1 downTo currentBitmapIndex + 1) {
+                val oldBitmap = bitmapHistory.removeAt(i)
+                if (oldBitmap != originalBitmap) {
+                    oldBitmap.recycle()
+                }
+            }
+        }
+        
+        // 如果超过最大历史数，删除最旧的
+        if (bitmapHistory.size >= maxBitmapHistory) {
+            val oldBitmap = bitmapHistory.removeAt(0)
+            if (oldBitmap != originalBitmap) {
+                oldBitmap.recycle()
+            }
+            currentBitmapIndex--
+        }
+        
+        // 添加新的bitmap到历史（创建副本）
+        val bitmapCopy = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, true)
+        bitmapHistory.add(bitmapCopy)
+        currentBitmapIndex = bitmapHistory.size - 1
+    }
+    
+    /**
      * 应用裁剪（在 GL 线程中调用）
      */
     private fun applyCrop() {
@@ -211,10 +297,9 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
                     validCropHeight
                 )
                 
-                // 释放旧的裁剪 bitmap（但不释放原始 bitmap）
-                if (croppedBitmap != null && croppedBitmap != originalBitmap) {
-                    croppedBitmap?.recycle()
-                }
+                // 保存裁剪后的bitmap到历史（用于撤销）
+                saveBitmapToHistory(newCroppedBitmap)
+                
                 croppedBitmap = newCroppedBitmap
                 
                 // 更新图片尺寸
@@ -320,6 +405,8 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
                 android.util.Log.e("ImageRenderer", "无法加载原始图片用于裁剪")
             } else {
                 android.util.Log.d("ImageRenderer", "原始图片加载成功: ${originalBitmap!!.width}x${originalBitmap!!.height}")
+                // 将原始bitmap保存到历史
+                saveBitmapToHistory(originalBitmap!!)
             }
         } catch (e: Exception) {
             android.util.Log.e("ImageRenderer", "初始化渲染器失败", e)
@@ -440,6 +527,16 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
 
     // 5. 在onDrawFrame中绘制矩形
     override fun onDrawFrame(gl: GL10?) {
+        // 处理待重新加载的纹理（用于撤销裁剪）
+        if (pendingTextureReload) {
+            pendingTextureReload = false
+            pendingReloadBitmap?.let { bitmap ->
+                reloadTexture(bitmap)
+                updateVertexBuffer()
+            }
+            pendingReloadBitmap = null
+        }
+        
         // 处理待处理的裁剪操作
         if (pendingCrop) {
             pendingCrop = false
