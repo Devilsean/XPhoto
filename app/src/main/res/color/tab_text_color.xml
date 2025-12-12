@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 选中状态：使用主题的主文本颜色 -->
+    <item android:color="?attr/colorOnSurface" android:state_selected="true" />
+    <!-- 未选中状态：使用主题的次要文本颜色 -->
+    <item android:color="?attr/colorOnSurfaceVariant" android:state_selected="false" />
+</selector>

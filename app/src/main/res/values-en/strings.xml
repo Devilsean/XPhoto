@@ -1,0 +1,302 @@
+<resources>
+    <!-- App Name -->
+    <string name="app_name">XPhoto</string>
+    
+    <!-- Common -->
+    <string name="confirm">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="close">Close</string>
+    <string name="reset">Reset</string>
+    <string name="back">Back</string>
+    <string name="done">Done</string>
+    <string name="unknown">Unknown</string>
+    <string name="later">Later</string>
+    <string name="restart_now">Restart Now</string>
+    <string name="continue_text">Continue</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="rotate">Rotate</string>
+    <string name="export">Export</string>
+    <string name="details">Details</string>
+    <string name="selected">Selected</string>
+    <string name="select_all">Select All</string>
+    <string name="selected_count_zero">0 items selected</string>
+    <string name="selected_count">%d items selected</string>
+    <string name="save_as_work">Save as Work</string>
+    <string name="export_to_gallery">Export to Gallery</string>
+    <string name="rotate_left">Rotate Left</string>
+    <string name="rotate_right">Rotate Right</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_edit">Edit</string>
+    <string name="nav_my">My</string>
+    
+    <!-- Home Fragment -->
+    <string name="quick_start">Quick Start</string>
+    <string name="open_camera">Open Camera</string>
+    <string name="import_from_gallery">Import from Gallery</string>
+    <string name="common_features">Common Features</string>
+    <string name="recent_edits">Recent Edits</string>
+    <string name="swipe_to_view_all">Swipe to view all ></string>
+    <string name="no_drafts">No drafts</string>
+    <string name="placeholder_only">No ideas yet, placeholder only</string>
+    
+    <!-- Quick Access Features -->
+    <string name="feature_filter">Filter</string>
+    <string name="feature_crop">Crop</string>
+    <string name="feature_puzzle">Puzzle</string>
+    <string name="feature_rotate">Rotate</string>
+    <string name="feature_text">Text</string>
+    <string name="feature_sticker">Sticker</string>
+    <string name="feature_brush">Brush</string>
+    <string name="feature_all">All</string>
+    
+    <!-- Camera Dialog -->
+    <string name="select_action">Select Action</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="record_video">Record Video</string>
+    <string name="cannot_open_camera">Cannot open camera</string>
+    <string name="cannot_open_video_camera">Cannot open video camera</string>
+    
+    <!-- My Fragment -->
+    <string name="tab_drafts">Drafts</string>
+    <string name="tab_completed">Completed</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="default_username">XPhoto Trainee</string>
+    <string name="default_signature">Currently practicing image editing and OpenGL ~</string>
+    <string name="app_settings">Settings</string>
+    <string name="user_avatar">User Avatar</string>
+    <string name="category_switch">Category Switch</string>
+    
+    <!-- Edit Profile -->
+    <string name="edit_profile">Edit Profile</string>
+    <string name="avatar">Avatar</string>
+    <string name="tap_to_change_avatar">Tap to change avatar</string>
+    <string name="click_to_change_avatar">Tap to change avatar</string>
+    <string name="nickname">Nickname</string>
+    <string name="enter_nickname">Enter nickname</string>
+    <string name="hint_enter_nickname">Enter nickname</string>
+    <string name="signature">Signature</string>
+    <string name="enter_signature">Enter signature</string>
+    <string name="hint_enter_signature">Enter signature</string>
+    <string name="nickname_empty">Nickname cannot be empty</string>
+    <string name="save_success">Saved successfully</string>
+    
+    <!-- Login -->
+    <string name="welcome_back">Welcome Back</string>
+    <string name="hint_username_or_email">Username or Email</string>
+    <string name="hint_password">Password</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="login_success">Login successful</string>
+    <string name="register_success">Registration successful</string>
+    
+    <!-- Album -->
+    <string name="no_media_found">No media files found</string>
+    <string name="load_media_failed">Failed to load media: %s</string>
+    <string name="permission_denied_album">Permission denied, cannot access gallery</string>
+    
+    <!-- Editor Activity -->
+    <string name="editor_title">Edit</string>
+    <string name="no_image_uri">No image URI provided</string>
+    <string name="load_image_failed">Failed to load image: %s</string>
+    <string name="filter_applied">Applied %s filter</string>
+    <string name="all_adjustments_reset">All adjustments reset</string>
+    <string name="crop_invalid">Invalid crop area</string>
+    <string name="crop_applied">Crop applied</string>
+    <string name="draft_loaded">Draft loaded</string>
+    <string name="load_draft_failed">Failed to load draft: %s</string>
+    <string name="draft_auto_saved">Draft auto-saved</string>
+    <string name="draft_saved">Draft saved successfully</string>
+    <string name="save_draft_failed">Failed to save draft: %s</string>
+    <string name="saved_as_work">Saved as work</string>
+    <string name="save_failed">Save failed: %s</string>
+    
+    <!-- Editor Exit Dialog -->
+    <string name="exit_editor">Exit Editor</string>
+    <string name="exit_editor_message">Current edit state has been auto-saved as draft.\nWould you like to save as a work?</string>
+    <string name="keep_draft_only">Keep Draft Only</string>
+    
+    <!-- Editor Tools -->
+    <string name="tool_crop">Crop</string>
+    <string name="tool_filter">Filter</string>
+    <string name="tool_adjust">Adjust</string>
+    <string name="tool_rotate_left">Rotate Left</string>
+    <string name="tool_rotate_right">Rotate Right</string>
+    <string name="tool_undo">Undo</string>
+    <string name="tool_redo">Redo</string>
+    
+    <!-- Crop Ratios -->
+    <string name="ratio_free">Free</string>
+    
+    <!-- Filter Names -->
+    <string name="filter_none">Original</string>
+    <string name="filter_grayscale">Grayscale</string>
+    <string name="filter_sepia">Sepia</string>
+    <string name="filter_cool">Cool</string>
+    <string name="filter_warm">Warm</string>
+    <string name="filter_vivid">Vivid</string>
+    <string name="filter_fade">Fade</string>
+    <string name="filter_invert">Invert</string>
+    <string name="filter_brightness">Brightness</string>
+    <string name="filter_contrast">Contrast</string>
+    
+    <!-- Adjustment Names -->
+    <string name="adjust_brightness">Brightness</string>
+    <string name="adjust_contrast">Contrast</string>
+    <string name="adjust_saturation">Saturation</string>
+    <string name="adjust_highlights">Highlights</string>
+    <string name="adjust_shadows">Shadows</string>
+    <string name="adjust_temperature">Temperature</string>
+    <string name="adjust_tint">Tint</string>
+    <string name="adjust_clarity">Clarity</string>
+    <string name="adjust_sharpen">Sharpen</string>
+    
+    <!-- Image Viewer -->
+    <string name="cannot_favorite">Cannot favorite this image</string>
+    <string name="added_to_favorites">Added to favorites</string>
+    <string name="removed_from_favorites">Removed from favorites</string>
+    <string name="operation_failed">Operation failed: %s</string>
+    <string name="cannot_export">Cannot export this image</string>
+    <string name="image_not_exists">Image file does not exist</string>
+    <string name="exported_to_gallery">Exported to system gallery</string>
+    <string name="export_failed">Export failed: %s</string>
+    <string name="cannot_edit">Cannot edit this image</string>
+    <string name="draft_cannot_favorite">Drafts cannot be favorited, please export as work first</string>
+    <string name="draft_cannot_export">Drafts cannot be exported, please export as work in editor first</string>
+    <string name="favorited">Favorited</string>
+    <string name="favorite">Favorite</string>
+    
+    <!-- Image Details -->
+    <string name="image_preview">Image Preview</string>
+    <string name="image_details">Image Details</string>
+    <string name="storage_path">Storage Path</string>
+    <string name="last_edit_time">Last Edit Time</string>
+    <string name="save_time">Save Time</string>
+    <string name="time">Time</string>
+    <string name="resolution">Resolution</string>
+    <string name="file_size">File Size</string>
+    <string name="format">Format</string>
+    <string name="file_format">File Format</string>
+    
+    <!-- Settings -->
+    <string name="settings_appearance_language">Appearance &amp; Language</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_summary">Light / Dark / Follow System</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_summary">Change app display language</string>
+    
+    <string name="settings_notification_cache">Notifications &amp; Cache</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_summary">Go to system notification settings</string>
+    <string name="settings_clear_cache">Clear Cache</string>
+    <string name="settings_clear_cache_summary">Clear temporary files to free up storage</string>
+    
+    <string name="settings_data_management">Data Management</string>
+    <string name="settings_clear_all_data">Clear All Data</string>
+    <string name="settings_clear_all_data_summary">Clear drafts, works, profile and preferences</string>
+    
+    <string name="settings_about_privacy">About &amp; Privacy</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_privacy_policy_summary">View privacy policy webpage</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_summary">Version 1.0.0 · XPhoto Android Training</string>
+    
+    <!-- Settings Dialogs -->
+    <string name="language_changed">Language Changed</string>
+    <string name="language_changed_message">To fully apply the new language setting, it is recommended to restart the app immediately.</string>
+    <string name="cannot_open_notification_settings">Cannot open notification settings</string>
+    
+    <string name="clear_cache_title">Clear Cache</string>
+    <string name="clear_cache_message">This will clear the app\'s temporary cache files, which may free up storage space. Are you sure you want to continue?</string>
+    <string name="cache_cleared">Cache cleared</string>
+    <string name="no_cache_to_clear">No cache to clear</string>
+    
+    <string name="about_app_title">About This App</string>
+    <string name="about_app_message">Version 1.0.0\n\nXPhoto Android Training · Photo Editing Demo App.\n\nMain Features: Gallery browsing, OpenGL editing canvas, basic parameter adjustment, crop, filter, rotate and export.\n\n© 2025 Sean (Some features completed with AI assistance, understood and integrated by myself)</string>
+    
+    <string name="no_browser_found">No browser app found to open this link</string>
+    
+    <string name="clear_all_data_title">Clear All Data</string>
+    <string name="clear_all_data_message">This action will clear all of the following data:\n\n• All drafts\n• All works\n• Profile information\n• Preferences\n\nThis action cannot be undone. Are you sure you want to continue?</string>
+    <string name="confirm_again">Confirm Again</string>
+    <string name="confirm_clear_all_message">Are you sure you want to clear all data?\n\nThis will delete all your drafts, works, profile information and preferences, and cannot be recovered!</string>
+    <string name="confirm_clear">Confirm Clear</string>
+    <string name="all_data_cleared">All data cleared</string>
+    <string name="data_cleared_title">Data Cleared</string>
+    <string name="data_cleared_message">All data has been successfully cleared. It is recommended to restart the app to ensure all changes take effect.</string>
+    <string name="clear_data_failed">Failed to clear data: %s</string>
+    
+    <!-- Theme Options -->
+    <string name="theme_light">Light Mode</string>
+    <string name="theme_dark">Dark Mode</string>
+    <string name="theme_system">Follow System</string>
+    
+    <!-- Language Options -->
+    <string name="language_system">Follow System</string>
+    <string name="language_chinese">简体中文</string>
+    <string name="language_english">English</string>
+    
+    <!-- Startup Action Options -->
+    <string name="startup_home">Home</string>
+    <string name="startup_camera">Open Camera</string>
+    <string name="startup_gallery">Open Gallery</string>
+    
+    <!-- Auto-save Options -->
+    <string name="autosave_1min">Every minute</string>
+    <string name="autosave_5min">Every 5 minutes</string>
+    <string name="autosave_10min">Every 10 minutes</string>
+    <string name="autosave_never">Never</string>
+    
+    <!-- Content Descriptions -->
+    <string name="cd_open_camera">Open Camera</string>
+    <string name="cd_import_gallery">Import from Gallery</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_undo">Undo</string>
+    <string name="cd_redo">Redo</string>
+    <string name="cd_crop">Crop</string>
+    <string name="cd_filter">Filter</string>
+    <string name="cd_adjust">Adjust</string>
+    <string name="cd_rotate_left">Rotate Counter-clockwise</string>
+    <string name="cd_rotate_right">Rotate Clockwise</string>
+    <string name="cd_save">Save</string>
+    <string name="cd_reset">Reset</string>
+    <string name="cd_rotate">Rotate</string>
+    <string name="cd_close">Close</string>
+    
+    <!-- Placeholder -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    
+    <!-- Content Types -->
+    <string name="content_type_drafts">Drafts</string>
+    <string name="content_type_works">Works</string>
+    <string name="content_type_favorites">Favorites</string>
+    
+    <!-- Tab Titles -->
+    <string name="tab_edit">Edit</string>
+    <string name="tab_my">My</string>
+    
+    <!-- Batch Operations -->
+    <string name="please_select_items_to_delete">Please select items to delete first</string>
+    <string name="confirm_delete">Confirm Delete</string>
+    <string name="confirm_delete_message">Are you sure you want to delete %d selected items? This action cannot be undone.</string>
+    <string name="deleted_drafts_count">Deleted %d drafts</string>
+    <string name="deleted_works_count">Deleted %d works</string>
+    <string name="delete_failed">Delete failed: %s</string>
+    <string name="please_select_drafts_to_save">Please select drafts to save first</string>
+    <string name="save_as_works">Save as Works</string>
+    <string name="save_drafts_as_works_message">Save %d selected drafts as works? Drafts will be deleted after saving.</string>
+    <string name="saved_works_count">Saved %d works</string>
+    <string name="please_select_works_to_export">Please select works to export first</string>
+    <string name="export_to_album">Export to Album</string>
+    <string name="export_works_message">Export %d selected works to system album?</string>
+    <string name="exported_works_count">Exported %d works to album</string>
+    
+    <!-- User Default Values -->
+    <string name="default_nickname">User Nickname</string>
+    <string name="default_user_signature">This person is lazy and left nothing behind</string>
+</resources>

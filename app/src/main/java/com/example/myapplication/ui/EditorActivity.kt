@@ -101,7 +101,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         // 验证图片URI
         if (originalImageUri == null || originalImageUri!!.isEmpty()) {
-            Toast.makeText(this, "未提供图片URI", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.no_image_uri, Toast.LENGTH_LONG).show()
             android.util.Log.e("EditorActivity", "图片URI为空或null")
             finish()
             return
@@ -143,7 +143,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "加载图片失败: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.load_image_failed, e.message), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -313,7 +313,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         // 应用滤镜后退出滤镜模式
         exitFilterMode()
-        Toast.makeText(this, "已应用${filter.displayName}滤镜", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.filter_applied, FilterAdapter.getFilterDisplayName(this, filter)), Toast.LENGTH_SHORT).show()
     }
     
     /**
@@ -431,7 +431,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         adjustmentAdapter.updateValues()
         glSurfaceView.requestRender()
         autoSaveDraft()
-        Toast.makeText(this, "已重置所有调整", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.all_adjustments_reset, Toast.LENGTH_SHORT).show()
     }
     
     /**
@@ -491,7 +491,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         val previousState = editHistory.undo()
         if (previousState != null) {
             restoreEditState(previousState)
-            Toast.makeText(this, "已撤销", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -502,7 +501,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         val nextState = editHistory.redo()
         if (nextState != null) {
             restoreEditState(nextState)
-            Toast.makeText(this, "已恢复", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -589,7 +587,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         // 检查图片显示区域是否有效
         if (imageDisplayRect.width() <= 0 || imageDisplayRect.height() <= 0) {
-            Toast.makeText(this, "裁剪区域无效", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.crop_invalid, Toast.LENGTH_SHORT).show()
             return
         }
         
@@ -625,7 +623,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         }
         
         exitCropMode()
-        Toast.makeText(this, "裁剪已应用", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.crop_applied, Toast.LENGTH_SHORT).show()
     }
     
     /**
@@ -766,10 +764,10 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     
                     glSurfaceView.requestRender()
                     
-                    Toast.makeText(this@EditorActivity, "草稿已加载", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditorActivity, R.string.draft_loaded, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@EditorActivity, "加载草稿失败：${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@EditorActivity, getString(R.string.load_draft_failed, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -813,7 +811,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 if (currentDraftId == null) {
                     currentDraftId = draftId
                     // 第一次保存时显示提示
-                    Toast.makeText(this@EditorActivity, "草稿已自动保存", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditorActivity, R.string.draft_auto_saved, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 // 静默失败，不影响用户体验
@@ -859,27 +857,27 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 
                 val draftId = draftRepository.saveOrUpdateDraft(draft)
                 currentDraftId = draftId
-                Toast.makeText(this@EditorActivity, "草稿保存成功", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@EditorActivity, R.string.draft_saved, Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                Toast.makeText(this@EditorActivity, "保存草稿失败：${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@EditorActivity, getString(R.string.save_draft_failed, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun showExitConfirmationDialog() {
         AlertDialog.Builder(this)
-            .setTitle("退出编辑")
-            .setMessage("当前编辑状态已自动保存为草稿。\n是否要保存为作品？")
-            .setPositiveButton("保存作品") { _, _ ->
+            .setTitle(R.string.exit_editor)
+            .setMessage(R.string.exit_editor_message)
+            .setPositiveButton(R.string.save_as_work) { _, _ ->
                 exitAfterSave = true
                 renderer.takeScreenshot()
                 glSurfaceView.requestRender()
             }
-            .setNegativeButton("仅保留草稿") { _, _ ->
+            .setNegativeButton(R.string.keep_draft_only) { _, _ ->
                 // 草稿已自动保存，直接退出
                 finish()
             }
-            .setNeutralButton("取消", null)
+            .setNeutralButton(R.string.cancel, null)
             .show()
     }
 
@@ -1198,7 +1196,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 }
                 
                 runOnUiThread {
-                    Toast.makeText(this@EditorActivity, "已保存为作品", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditorActivity, R.string.saved_as_work, Toast.LENGTH_SHORT).show()
                     
                     if (exitAfterSave) {
                         // 如果是退出时保存，直接结束
@@ -1217,7 +1215,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    Toast.makeText(this@EditorActivity, "保存失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditorActivity, getString(R.string.save_failed, e.message), Toast.LENGTH_SHORT).show()
                     if (exitAfterSave) {
                         finish()
                     }

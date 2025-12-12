@@ -50,9 +50,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
                 context?.let { ctx ->
                     MaterialAlertDialogBuilder(ctx)
-                        .setTitle("语言已更改")
-                        .setMessage("为了让新的语言设置完全生效，建议立即重启应用。")
-                        .setPositiveButton("立即重启") { _, _ ->
+                        .setTitle(R.string.language_changed)
+                        .setMessage(R.string.language_changed_message)
+                        .setPositiveButton(R.string.restart_now) { _, _ ->
                             val intent = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
                             val componentName = intent?.component
                             if (componentName != null) {
@@ -61,7 +61,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             }
                             Runtime.getRuntime().exit(0)
                         }
-                        .setNegativeButton("稍后", null)
+                        .setNegativeButton(R.string.later, null)
                         .setCancelable(false)
                         .show()
                 }
@@ -84,7 +84,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     }
                     startActivity(intent)
                 } catch (_: Exception) {
-                    Toast.makeText(ctx, "无法打开通知设置", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(ctx, R.string.cannot_open_notification_settings, Toast.LENGTH_SHORT).show()
                 }
             }
             true
@@ -94,15 +94,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("clear_cache")?.setOnPreferenceClickListener { pref ->
             context?.let { ctx ->
                 MaterialAlertDialogBuilder(ctx)
-                    .setTitle("清理缓存")
-                    .setMessage("这将清除应用的临时缓存文件，可能会释放存储空间。确定要继续吗？")
-                    .setNegativeButton("取消", null)
-                    .setPositiveButton("确定") { _, _ ->
+                    .setTitle(R.string.clear_cache_title)
+                    .setMessage(R.string.clear_cache_message)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.confirm) { _, _ ->
                         val deleted = ctx.cacheDir?.deleteRecursively() ?: false
                         pref.summary = if (deleted) {
-                            "缓存已清理"
+                            getString(R.string.cache_cleared)
                         } else {
-                            "当前无可清理缓存"
+                            getString(R.string.no_cache_to_clear)
                         }
                     }
                     .show()
@@ -114,9 +114,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("about_us")?.setOnPreferenceClickListener {
             context?.let { ctx ->
                 MaterialAlertDialogBuilder(ctx)
-                    .setTitle("关于本应用")
-                    .setMessage("版本 1.0.0\n\n醒图安卓训练营 · 图片编辑 Demo 应用。\n\n主要功能：相册浏览、OpenGL 编辑画布、基础参数调节、裁剪、滤镜、旋转与导出。\n\n© 2025 Sean（部分功能在 AI 辅助下完成，并由本人理解与整合）")
-                    .setPositiveButton("确定", null)
+                    .setTitle(R.string.about_app_title)
+                    .setMessage(R.string.about_app_message)
+                    .setPositiveButton(R.string.confirm, null)
                     .show()
             }
             true
@@ -129,7 +129,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             try {
                 startActivity(intent)
             } catch (_: ActivityNotFoundException) {
-                Toast.makeText(context, "未找到可以打开此链接的浏览器应用", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.no_browser_found, Toast.LENGTH_SHORT).show()
             }
             true
         }
@@ -139,16 +139,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
             context?.let { ctx ->
                 // 第一次确认弹窗
                 MaterialAlertDialogBuilder(ctx)
-                    .setTitle("清除所有数据")
-                    .setMessage("此操作将清除以下所有数据：\n\n• 所有草稿\n• 所有作品\n• 个人信息\n• 设置偏好\n\n此操作不可撤销，确定要继续吗？")
-                    .setNegativeButton("取消", null)
-                    .setPositiveButton("继续") { _, _ ->
+                    .setTitle(R.string.clear_all_data_title)
+                    .setMessage(R.string.clear_all_data_message)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.continue_text) { _, _ ->
                         // 第二次确认弹窗
                         MaterialAlertDialogBuilder(ctx)
-                            .setTitle("再次确认")
-                            .setMessage("您确定要清除所有数据吗？\n\n这将删除您的所有草稿、作品、个人信息和设置偏好，且无法恢复！")
-                            .setNegativeButton("取消", null)
-                            .setPositiveButton("确定清除") { _, _ ->
+                            .setTitle(R.string.confirm_again)
+                            .setMessage(R.string.confirm_clear_all_message)
+                            .setNegativeButton(R.string.cancel, null)
+                            .setPositiveButton(R.string.confirm_clear) { _, _ ->
                                 clearAllData()
                             }
                             .show()
@@ -194,22 +194,22 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
                 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(ctx, "所有数据已清除", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(ctx, R.string.all_data_cleared, Toast.LENGTH_SHORT).show()
                     
                     // 提示用户重启应用
                     MaterialAlertDialogBuilder(ctx)
-                        .setTitle("数据已清除")
-                        .setMessage("所有数据已成功清除。建议重启应用以确保所有更改生效。")
-                        .setPositiveButton("立即重启") { _, _ ->
+                        .setTitle(R.string.data_cleared_title)
+                        .setMessage(R.string.data_cleared_message)
+                        .setPositiveButton(R.string.restart_now) { _, _ ->
                             restartApp()
                         }
-                        .setNegativeButton("稍后", null)
+                        .setNegativeButton(R.string.later, null)
                         .setCancelable(false)
                         .show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(ctx, "清除数据失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(ctx, getString(R.string.clear_data_failed, e.message), Toast.LENGTH_SHORT).show()
                 }
             }
         }

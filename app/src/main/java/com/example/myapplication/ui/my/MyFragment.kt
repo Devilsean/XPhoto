@@ -45,9 +45,9 @@ class MyFragment : Fragment() {
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = when (position) {
-                0 -> "草稿箱"
-                1 -> "已完成"
-                2 -> "收藏"
+                0 -> getString(R.string.tab_drafts)
+                1 -> getString(R.string.tab_completed)
+                2 -> getString(R.string.tab_favorites)
                 else -> null
             }
         }.attach()
@@ -64,8 +64,19 @@ class MyFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             userRepository.user.collect { user ->
                 user?.let {
-                    nicknameTextView.text = it.nickname
-                    signatureTextView.text = it.signature
+                    // 如果昵称是默认值或为空，显示本地化的默认昵称
+                    nicknameTextView.text = if (it.nickname.isEmpty() || it.nickname == "用户昵称") {
+                        getString(R.string.default_nickname)
+                    } else {
+                        it.nickname
+                    }
+                    
+                    // 如果签名是默认值或为空，显示本地化的默认签名
+                    signatureTextView.text = if (it.signature.isEmpty() || it.signature == "这个人很懒，什么都没留下") {
+                        getString(R.string.default_user_signature)
+                    } else {
+                        it.signature
+                    }
 
                     it.avatarUri?.let { uri ->
                         Glide.with(requireContext())

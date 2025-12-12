@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:gravity="center|bottom">
+        <shape android:shape="rectangle">
+            <!-- 淡粉色指示器 -->
+            <solid android:color="#FFFFB6C1" />
+            <!-- 圆角 -->
+            <corners android:radius="2dp" />
+            <!-- 短指示器尺寸 -->
+            <size
+                android:width="24dp"
+                android:height="3dp" />
+        </shape>
+    </item>
+</layer-list>

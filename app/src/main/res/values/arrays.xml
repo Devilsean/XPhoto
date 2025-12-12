@@ -2,9 +2,9 @@
 <resources>
     <!-- Theme -->
     <string-array name="theme_entries">
-        <item>浅色模式</item>
-        <item>深色模式</item>
-        <item>跟随系统</item>
+        <item>@string/theme_light</item>
+        <item>@string/theme_dark</item>
+        <item>@string/theme_system</item>
     </string-array>
     <string-array name="theme_values">
         <item>light</item>
@@ -14,9 +14,9 @@
 
     <!-- Language -->
     <string-array name="language_entries">
-        <item>跟随系统</item>
-        <item>简体中文</item>
-        <item>English</item>
+        <item>@string/language_system</item>
+        <item>@string/language_chinese</item>
+        <item>@string/language_english</item>
     </string-array>
     <string-array name="language_values">
         <item>system</item>
@@ -26,9 +26,9 @@
 
     <!-- Startup Action -->
     <string-array name="startup_action_entries">
-        <item>主页</item>
-        <item>打开相机</item>
-        <item>进入相册</item>
+        <item>@string/startup_home</item>
+        <item>@string/startup_camera</item>
+        <item>@string/startup_gallery</item>
     </string-array>
     <string-array name="startup_action_values">
         <item>home</item>
@@ -38,10 +38,10 @@
 
     <!-- Auto-save Frequency -->
     <string-array name="autosave_entries">
-        <item>每分钟</item>
-        <item>每 5 分钟</item>
-        <item>每 10 分钟</item>
-        <item>从不</item>
+        <item>@string/autosave_1min</item>
+        <item>@string/autosave_5min</item>
+        <item>@string/autosave_10min</item>
+        <item>@string/autosave_never</item>
     </string-array>
     <string-array name="autosave_values">
         <item>1</item>

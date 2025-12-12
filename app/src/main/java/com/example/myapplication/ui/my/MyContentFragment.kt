@@ -102,9 +102,9 @@ class MyContentFragment : Fragment() {
 
         // 根据contentType显示不同的数据
         when (contentType) {
-            "作品" -> setupWorksView()
-            "草稿" -> setupDraftsView()
-            "收藏" -> setupFavoritesView()
+            getString(R.string.content_type_works) -> setupWorksView()
+            getString(R.string.content_type_drafts) -> setupDraftsView()
+            getString(R.string.content_type_favorites) -> setupFavoritesView()
             else -> setupEmptyView()
         }
         
@@ -140,12 +140,15 @@ class MyContentFragment : Fragment() {
         }
         
         // 根据内容类型显示/隐藏按钮
+        val draftsType = getString(R.string.content_type_drafts)
+        val worksType = getString(R.string.content_type_works)
+        val favoritesType = getString(R.string.content_type_favorites)
         when (contentType) {
-            "草稿" -> {
+            draftsType -> {
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_save)?.visibility = View.VISIBLE
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_export)?.visibility = View.GONE
             }
-            "作品", "收藏" -> {
+            worksType, favoritesType -> {
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_save)?.visibility = View.GONE
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_export)?.visibility = View.VISIBLE
             }
@@ -385,12 +388,15 @@ class MyContentFragment : Fragment() {
     }
     
     private fun selectAll() {
+        val draftsType = getString(R.string.content_type_drafts)
+        val worksType = getString(R.string.content_type_works)
+        val favoritesType = getString(R.string.content_type_favorites)
         when (contentType) {
-            "草稿" -> {
+            draftsType -> {
                 selectedDraftIds.clear()
                 selectedDraftIds.addAll(currentDrafts.map { it.id })
             }
-            "作品", "收藏" -> {
+            worksType, favoritesType -> {
                 selectedImageIds.clear()
                 selectedImageIds.addAll(currentImages.map { it.id })
             }
@@ -400,45 +406,50 @@ class MyContentFragment : Fragment() {
     }
     
     private fun updateSelectionCount() {
+        val draftsType = getString(R.string.content_type_drafts)
         val count = when (contentType) {
-            "草稿" -> selectedDraftIds.size
+            draftsType -> selectedDraftIds.size
             else -> selectedImageIds.size
         }
-        tvSelectionCount?.text = "已选择 $count 项"
+        tvSelectionCount?.text = getString(R.string.selected_count, count)
     }
     
     // ==================== 批量操作方法 ====================
     
     private fun showDeleteConfirmDialog() {
+        val draftsType = getString(R.string.content_type_drafts)
         val count = when (contentType) {
-            "草稿" -> selectedDraftIds.size
+            draftsType -> selectedDraftIds.size
             else -> selectedImageIds.size
         }
         
         if (count == 0) {
-            Toast.makeText(requireContext(), "请先选择要删除的项目", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.please_select_items_to_delete, Toast.LENGTH_SHORT).show()
             return
         }
         
         AlertDialog.Builder(requireContext())
-            .setTitle("确认删除")
-            .setMessage("确定要删除选中的 $count 个项目吗？此操作不可恢复。")
-            .setPositiveButton("删除") { _, _ ->
+            .setTitle(R.string.confirm_delete)
+            .setMessage(getString(R.string.confirm_delete_message, count))
+            .setPositiveButton(R.string.delete) { _, _ ->
                 performBatchDelete()
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
     
     private fun performBatchDelete() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                val draftsType = getString(R.string.content_type_drafts)
+                val worksType = getString(R.string.content_type_works)
+                val favoritesType = getString(R.string.content_type_favorites)
                 when (contentType) {
-                    "草稿" -> {
+                    draftsType -> {
                         draftRepository.deleteDrafts(selectedDraftIds.toList())
-                        Toast.makeText(requireContext(), "已删除 ${selectedDraftIds.size} 个草稿", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.deleted_drafts_count, selectedDraftIds.size), Toast.LENGTH_SHORT).show()
                     }
-                    "作品", "收藏" -> {
+                    worksType, favoritesType -> {
                         // 删除文件
                         selectedImageIds.forEach { id ->
                             currentImages.find { it.id == id }?.let { image ->
@@ -453,12 +464,12 @@ class MyContentFragment : Fragment() {
                             }
                         }
                         editedImageRepository.deleteEditedImages(selectedImageIds.toList())
-                        Toast.makeText(requireContext(), "已删除 ${selectedImageIds.size} 个作品", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.deleted_works_count, selectedImageIds.size), Toast.LENGTH_SHORT).show()
                     }
                 }
                 exitSelectionMode()
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "删除失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.delete_failed, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -468,17 +479,17 @@ class MyContentFragment : Fragment() {
      */
     private fun batchSaveDraftsAsWorks() {
         if (selectedDraftIds.isEmpty()) {
-            Toast.makeText(requireContext(), "请先选择要保存的草稿", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.please_select_drafts_to_save, Toast.LENGTH_SHORT).show()
             return
         }
         
         AlertDialog.Builder(requireContext())
-            .setTitle("保存为作品")
-            .setMessage("将选中的 ${selectedDraftIds.size} 个草稿保存为作品？保存后草稿将被删除。")
-            .setPositiveButton("保存") { _, _ ->
+            .setTitle(R.string.save_as_works)
+            .setMessage(getString(R.string.save_drafts_as_works_message, selectedDraftIds.size))
+            .setPositiveButton(R.string.save) { _, _ ->
                 performBatchSave()
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
     
@@ -507,10 +518,10 @@ class MyContentFragment : Fragment() {
                     }
                 }
                 
-                Toast.makeText(requireContext(), "已保存 $successCount 个作品", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.saved_works_count, successCount), Toast.LENGTH_SHORT).show()
                 exitSelectionMode()
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "保存失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.save_failed, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -520,17 +531,17 @@ class MyContentFragment : Fragment() {
      */
     private fun batchExportWorks() {
         if (selectedImageIds.isEmpty()) {
-            Toast.makeText(requireContext(), "请先选择要导出的作品", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.please_select_works_to_export, Toast.LENGTH_SHORT).show()
             return
         }
         
         AlertDialog.Builder(requireContext())
-            .setTitle("导出到相册")
-            .setMessage("将选中的 ${selectedImageIds.size} 个作品导出到系统相册？")
-            .setPositiveButton("导出") { _, _ ->
+            .setTitle(R.string.export_to_album)
+            .setMessage(getString(R.string.export_works_message, selectedImageIds.size))
+            .setPositiveButton(R.string.export) { _, _ ->
                 performBatchExport()
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
     
@@ -583,10 +594,10 @@ class MyContentFragment : Fragment() {
                     }
                 }
                 
-                Toast.makeText(requireContext(), "已导出 $successCount 个作品到相册", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.exported_works_count, successCount), Toast.LENGTH_SHORT).show()
                 exitSelectionMode()
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.export_failed, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }

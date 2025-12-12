@@ -80,7 +80,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="快速开始"
+                    android:text="@string/quick_start"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -120,12 +120,12 @@
                                 android:layout_height="48dp"
                                 android:src="@drawable/ic_camera"
                                 app:tint="?attr/colorOnSurface"
-                                android:contentDescription="打开相机" />
+                                android:contentDescription="@string/cd_open_camera" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
-                                android:text="打开相机"
+                                android:text="@string/open_camera"
                                 android:textColor="?attr/colorOnSurface"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
@@ -158,13 +158,13 @@
                                 android:layout_width="48dp"
                                 android:layout_height="48dp"
                                 android:src="@drawable/ic_album"
-                                android:contentDescription="从相册导入" />
+                                android:contentDescription="@string/cd_import_gallery" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
-                                android:text="从相册导入"
+                                android:text="@string/import_from_gallery"
                                 android:textColor="?attr/colorOnSurface"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
@@ -203,7 +203,7 @@
                     android:id="@+id/quick_access_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="常用功能"
+                    android:text="@string/common_features"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -257,7 +257,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="最近编辑"
+                        android:text="@string/recent_edits"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -266,7 +266,7 @@
                         android:id="@+id/view_all_drafts"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="滑动查看全部 >"
+                        android:text="@string/swipe_to_view_all"
                         android:textColor="?attr/colorSecondary"
                         android:textSize="14sp"
                         android:clickable="true"

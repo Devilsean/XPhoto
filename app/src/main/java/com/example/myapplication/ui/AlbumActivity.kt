@@ -109,7 +109,7 @@ class AlbumActivity : AppCompatActivity() {
                 if (currentPage == 1 && mediaList.isEmpty()) {
                     Toast.makeText(
                         this@AlbumActivity,
-                        "未找到任何媒体文件",
+                        R.string.no_media_found,
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -117,7 +117,7 @@ class AlbumActivity : AppCompatActivity() {
                 e.printStackTrace()
                 Toast.makeText(
                     this@AlbumActivity,
-                    "加载媒体文件失败: ${e.message}",
+                    getString(R.string.load_media_failed, e.message),
                     Toast.LENGTH_SHORT
                 ).show()
             } finally {
@@ -141,7 +141,7 @@ class AlbumActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 loadMedia()
             } else {
-                Toast.makeText(this, "权限被拒绝，无法访问相册", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.permission_denied_album, Toast.LENGTH_SHORT).show()
                 finish()
             }
         }

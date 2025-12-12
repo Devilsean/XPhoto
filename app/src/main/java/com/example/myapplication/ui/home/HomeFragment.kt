@@ -14,7 +14,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -66,7 +65,7 @@ class HomeFragment : Fragment() {
         }
 
         val authority = "${requireActivity().packageName}.provider"
-        return FileProvider.getUriForFile(requireActivity().applicationContext, authority, tmpFile)
+        return androidx.core.content.FileProvider.getUriForFile(requireActivity().applicationContext, authority, tmpFile)
     }
 
     private fun getTmpVideoUri(): Uri {
@@ -75,7 +74,7 @@ class HomeFragment : Fragment() {
             deleteOnExit()
         }
         val authority = "${requireActivity().packageName}.provider"
-        return FileProvider.getUriForFile(requireActivity().applicationContext, authority, tmpFile)
+        return androidx.core.content.FileProvider.getUriForFile(requireActivity().applicationContext, authority, tmpFile)
     }
 
     // 为方便演示，先在内部创建简单的 Adapter
@@ -141,9 +140,9 @@ class HomeFragment : Fragment() {
         val importGalleryButton: CardView? = view.findViewById(R.id.btn_import_gallery)
 
         launchCameraButton?.setOnClickListener {
-            val options = arrayOf("拍照", "录像")
+            val options = arrayOf(getString(R.string.take_photo), getString(R.string.record_video))
             android.app.AlertDialog.Builder(requireContext())
-                .setTitle("选择操作")
+                .setTitle(R.string.select_action)
                 .setItems(options) { _, which ->
                     when (which) {
                         0 -> {
@@ -154,7 +153,7 @@ class HomeFragment : Fragment() {
                                     takePictureLauncher.launch(uri)
                                 }
                             } catch (e: Exception) {
-                                Toast.makeText(context, "无法打开相机", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.cannot_open_camera, Toast.LENGTH_SHORT).show()
                                 Log.e(TAG, "打开相机失败", e)
                             }
                         }
@@ -166,7 +165,7 @@ class HomeFragment : Fragment() {
                                     takeVideoLauncher.launch(uri)
                                 }
                             } catch (e: Exception) {
-                                Toast.makeText(context, "无法打开摄像机", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.cannot_open_video_camera, Toast.LENGTH_SHORT).show()
                                 Log.e(TAG, "打开摄像机失败", e)
                             }
                         }
@@ -246,18 +245,18 @@ class HomeFragment : Fragment() {
             
             // 创建常用功能列表（图标+文字）
             val quickAccessItems = listOf(
-                QuickAccessItem("滤镜", R.drawable.ic_filter_vector),
-                QuickAccessItem("裁剪", R.drawable.ic_crop_vector),
-                QuickAccessItem("拼图", R.drawable.ic_puzzle),
-                QuickAccessItem("旋转", R.drawable.ic_rotate),
-                QuickAccessItem("文字", R.drawable.ic_text_vector),
-                QuickAccessItem("贴纸", R.drawable.ic_sticker),
-                QuickAccessItem("画笔", R.drawable.ic_brush),
-                QuickAccessItem("全部", R.drawable.ic_grid)
+                QuickAccessItem(getString(R.string.feature_filter), R.drawable.ic_filter_vector),
+                QuickAccessItem(getString(R.string.feature_crop), R.drawable.ic_crop_vector),
+                QuickAccessItem(getString(R.string.feature_puzzle), R.drawable.ic_puzzle),
+                QuickAccessItem(getString(R.string.feature_rotate), R.drawable.ic_rotate),
+                QuickAccessItem(getString(R.string.feature_text), R.drawable.ic_text_vector),
+                QuickAccessItem(getString(R.string.feature_sticker), R.drawable.ic_sticker),
+                QuickAccessItem(getString(R.string.feature_brush), R.drawable.ic_brush),
+                QuickAccessItem(getString(R.string.feature_all), R.drawable.ic_grid)
             )
             
             quickAccessRecyclerView.adapter = QuickAccessAdapter(quickAccessItems) { item ->
-                Toast.makeText(context, "暂无巧思，仅占位使用", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.placeholder_only, Toast.LENGTH_SHORT).show()
             }
             Log.d(TAG, "常用功能网格设置完成")
         } catch (e: Exception) {
@@ -281,7 +280,7 @@ class HomeFragment : Fragment() {
                 try {
                     draftRepository.allDrafts.collect { drafts ->
                         if (drafts.isEmpty()) {
-                            draftsRecyclerView.adapter = SimpleTextAdapter(listOf("暂无草稿"))
+                            draftsRecyclerView.adapter = SimpleTextAdapter(listOf(getString(R.string.no_drafts)))
                         } else {
                             // 创建草稿适配器，显示预览图
                             draftsRecyclerView.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

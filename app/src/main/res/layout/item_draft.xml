@@ -62,7 +62,7 @@
             android:padding="4dp"
             app:tint="@android:color/white"
             android:visibility="gone"
-            android:contentDescription="已选择"
+            android:contentDescription="@string/selected"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -75,7 +75,7 @@
             android:src="@drawable/ic_heart_full"
             app:tint="#FF4081"
             android:visibility="gone"
-            android:contentDescription="已收藏"
+            android:contentDescription="@string/favorited"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

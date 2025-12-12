@@ -4,20 +4,20 @@
 
     <!-- 1. 外观与语言 -->
     <PreferenceCategory
-        android:title="外观与语言">
+        android:title="@string/settings_appearance_language">
 
         <ListPreference
             android:key="theme"
-            android:title="主题模式"
-            android:summary="浅色 / 深色 / 跟随系统"
+            android:title="@string/settings_theme"
+            android:summary="@string/settings_theme_summary"
             android:defaultValue="system"
             app:entries="@array/theme_entries"
             app:entryValues="@array/theme_values" />
 
         <ListPreference
             android:key="language"
-            android:title="语言"
-            android:summary="切换应用显示语言"
+            android:title="@string/settings_language"
+            android:summary="@string/settings_language_summary"
             android:defaultValue="system"
             app:entries="@array/language_entries"
             app:entryValues="@array/language_values" />
@@ -26,44 +26,44 @@
 
     <!-- 2. 通知与缓存 -->
     <PreferenceCategory
-        android:title="通知与缓存">
+        android:title="@string/settings_notification_cache">
 
         <Preference
             android:key="notifications"
-            android:title="通知管理"
-            android:summary="跳转到系统通知设置" />
+            android:title="@string/settings_notifications"
+            android:summary="@string/settings_notifications_summary" />
 
         <Preference
             android:key="clear_cache"
-            android:title="清理缓存"
-            android:summary="清理临时文件，释放存储空间" />
+            android:title="@string/settings_clear_cache"
+            android:summary="@string/settings_clear_cache_summary" />
 
     </PreferenceCategory>
 
     <!-- 3. 数据管理 -->
     <PreferenceCategory
-        android:title="数据管理">
+        android:title="@string/settings_data_management">
 
         <Preference
             android:key="clear_all_data"
-            android:title="清除所有数据"
-            android:summary="清除草稿、作品、个人信息和设置偏好" />
+            android:title="@string/settings_clear_all_data"
+            android:summary="@string/settings_clear_all_data_summary" />
 
     </PreferenceCategory>
 
-    <!-- 3. 关于与隐私 -->
+    <!-- 4. 关于与隐私 -->
     <PreferenceCategory
-        android:title="关于与隐私">
+        android:title="@string/settings_about_privacy">
 
         <Preference
             android:key="privacy_policy"
-            android:title="隐私政策"
-            android:summary="查看隐私政策网页" />
+            android:title="@string/settings_privacy_policy"
+            android:summary="@string/settings_privacy_policy_summary" />
 
         <Preference
             android:key="about_us"
-            android:title="关于应用"
-            android:summary="版本 1.0.0 · 醒图安卓训练营" />
+            android:title="@string/settings_about"
+            android:summary="@string/settings_about_summary" />
 
     </PreferenceCategory>
 

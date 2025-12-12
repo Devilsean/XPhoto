@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Layer 1: The gradient background -->
+    <item android:drawable="@drawable/splash_gradient_bg" />
+
+    <!-- Layer 2: The logo, centered -->
+    <item
+        android:width="200dp"
+        android:height="80dp"
+        android:gravity="center">
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/ic_x_vector"
+            android:tint="@color/splash_text_primary" />
+    </item>
+</layer-list>

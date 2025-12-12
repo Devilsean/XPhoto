@@ -1,5 +1,303 @@
 <resources>
+    <!-- App Name -->
     <string name="app_name">XPhoto</string>
-    <!-- TODO: Remove or change this placeholder text -->
+    
+    <!-- Common -->
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    <string name="close">关闭</string>
+    <string name="reset">重置</string>
+    <string name="back">返回</string>
+    <string name="done">完成</string>
+    <string name="unknown">未知</string>
+    <string name="later">稍后</string>
+    <string name="restart_now">立即重启</string>
+    <string name="continue_text">继续</string>
+    <string name="undo">撤销</string>
+    <string name="redo">重做</string>
+    <string name="rotate">旋转</string>
+    <string name="export">导出</string>
+    <string name="details">详情</string>
+    <string name="selected">已选择</string>
+    <string name="select_all">全选</string>
+    <string name="selected_count_zero">已选择 0 项</string>
+    <string name="selected_count">已选择 %d 项</string>
+    <string name="save_as_work">保存为作品</string>
+    <string name="export_to_gallery">导出到相册</string>
+    <string name="rotate_left">左转</string>
+    <string name="rotate_right">右转</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">首页</string>
+    <string name="nav_edit">修图</string>
+    <string name="nav_my">我的</string>
+    
+    <!-- Home Fragment -->
+    <string name="quick_start">快速开始</string>
+    <string name="open_camera">打开相机</string>
+    <string name="import_from_gallery">从相册导入</string>
+    <string name="common_features">常用功能</string>
+    <string name="recent_edits">最近编辑</string>
+    <string name="swipe_to_view_all">滑动查看全部 ></string>
+    <string name="no_drafts">暂无草稿</string>
+    <string name="placeholder_only">暂无巧思，仅占位使用</string>
+    
+    <!-- Quick Access Features -->
+    <string name="feature_filter">滤镜</string>
+    <string name="feature_crop">裁剪</string>
+    <string name="feature_puzzle">拼图</string>
+    <string name="feature_rotate">旋转</string>
+    <string name="feature_text">文字</string>
+    <string name="feature_sticker">贴纸</string>
+    <string name="feature_brush">画笔</string>
+    <string name="feature_all">全部</string>
+    
+    <!-- Camera Dialog -->
+    <string name="select_action">选择操作</string>
+    <string name="take_photo">拍照</string>
+    <string name="record_video">录像</string>
+    <string name="cannot_open_camera">无法打开相机</string>
+    <string name="cannot_open_video_camera">无法打开摄像机</string>
+    
+    <!-- My Fragment -->
+    <string name="tab_drafts">草稿箱</string>
+    <string name="tab_completed">已完成</string>
+    <string name="tab_favorites">收藏</string>
+    <string name="default_username">醒图训练营学员</string>
+    <string name="default_signature">最近正在练习图像编辑和OpenGL ~</string>
+    <string name="app_settings">应用设置</string>
+    <string name="user_avatar">用户头像</string>
+    <string name="category_switch">作品分类切换</string>
+    
+    <!-- Edit Profile -->
+    <string name="edit_profile">编辑个人信息</string>
+    <string name="avatar">头像</string>
+    <string name="tap_to_change_avatar">点击更换头像</string>
+    <string name="click_to_change_avatar">点击更换头像</string>
+    <string name="nickname">昵称</string>
+    <string name="enter_nickname">请输入昵称</string>
+    <string name="hint_enter_nickname">请输入昵称</string>
+    <string name="signature">个性签名</string>
+    <string name="enter_signature">请输入个性签名</string>
+    <string name="hint_enter_signature">请输入个性签名</string>
+    <string name="nickname_empty">昵称不能为空</string>
+    <string name="save_success">保存成功</string>
+    
+    <!-- Login -->
+    <string name="welcome_back">欢迎回来</string>
+    <string name="hint_username_or_email">用户名或邮箱</string>
+    <string name="hint_password">密码</string>
+    <string name="login">登录</string>
+    <string name="register">注册</string>
+    <string name="login_success">登录成功</string>
+    <string name="register_success">注册成功</string>
+    
+    <!-- Album -->
+    <string name="no_media_found">未找到任何媒体文件</string>
+    <string name="load_media_failed">加载媒体文件失败: %s</string>
+    <string name="permission_denied_album">权限被拒绝，无法访问相册</string>
+    
+    <!-- Editor Activity -->
+    <string name="editor_title">编辑</string>
+    <string name="no_image_uri">未提供图片URI</string>
+    <string name="load_image_failed">加载图片失败: %s</string>
+    <string name="filter_applied">已应用%s滤镜</string>
+    <string name="all_adjustments_reset">已重置所有调整</string>
+    <string name="crop_invalid">裁剪区域无效</string>
+    <string name="crop_applied">裁剪已应用</string>
+    <string name="draft_loaded">草稿已加载</string>
+    <string name="load_draft_failed">加载草稿失败：%s</string>
+    <string name="draft_auto_saved">草稿已自动保存</string>
+    <string name="draft_saved">草稿保存成功</string>
+    <string name="save_draft_failed">保存草稿失败：%s</string>
+    <string name="saved_as_work">已保存为作品</string>
+    <string name="save_failed">保存失败: %s</string>
+    
+    <!-- Editor Exit Dialog -->
+    <string name="exit_editor">退出编辑</string>
+    <string name="exit_editor_message">当前编辑状态已自动保存为草稿。\n是否要保存为作品？</string>
+    <string name="save_as_work">保存作品</string>
+    <string name="keep_draft_only">仅保留草稿</string>
+    
+    <!-- Editor Tools -->
+    <string name="tool_crop">裁剪</string>
+    <string name="tool_filter">滤镜</string>
+    <string name="tool_adjust">调整</string>
+    <string name="tool_rotate_left">左转</string>
+    <string name="tool_rotate_right">右转</string>
+    <string name="tool_undo">撤销</string>
+    <string name="tool_redo">重做</string>
+    
+    <!-- Crop Ratios -->
+    <string name="ratio_free">自由</string>
+    
+    <!-- Filter Names -->
+    <string name="filter_none">原图</string>
+    <string name="filter_grayscale">黑白</string>
+    <string name="filter_sepia">复古</string>
+    <string name="filter_cool">冷色调</string>
+    <string name="filter_warm">暖色调</string>
+    <string name="filter_vivid">鲜艳</string>
+    <string name="filter_fade">淡化</string>
+    <string name="filter_invert">反色</string>
+    <string name="filter_brightness">增亮</string>
+    <string name="filter_contrast">对比度</string>
+    
+    <!-- Adjustment Names -->
+    <string name="adjust_brightness">亮度</string>
+    <string name="adjust_contrast">对比度</string>
+    <string name="adjust_saturation">饱和度</string>
+    <string name="adjust_highlights">高光</string>
+    <string name="adjust_shadows">阴影</string>
+    <string name="adjust_temperature">色温</string>
+    <string name="adjust_tint">色调</string>
+    <string name="adjust_clarity">清晰度</string>
+    <string name="adjust_sharpen">锐化</string>
+    
+    <!-- Image Viewer -->
+    <string name="cannot_favorite">无法收藏此图片</string>
+    <string name="added_to_favorites">已添加到收藏</string>
+    <string name="removed_from_favorites">已取消收藏</string>
+    <string name="operation_failed">操作失败: %s</string>
+    <string name="cannot_export">无法导出此图片</string>
+    <string name="image_not_exists">图片文件不存在</string>
+    <string name="exported_to_gallery">已导出到系统相册</string>
+    <string name="export_failed">导出失败: %s</string>
+    <string name="cannot_edit">无法编辑此图片</string>
+    <string name="draft_cannot_favorite">草稿不能收藏，请先导出为作品</string>
+    <string name="draft_cannot_export">草稿不能导出，请先在编辑器中导出为作品</string>
+    <string name="favorited">已收藏</string>
+    <string name="favorite">收藏</string>
+    
+    <!-- Image Details -->
+    <string name="image_preview">图片预览</string>
+    <string name="image_details">图片详情</string>
+    <string name="storage_path">存储位置</string>
+    <string name="last_edit_time">最后编辑时间</string>
+    <string name="save_time">保存时间</string>
+    <string name="time">时间</string>
+    <string name="resolution">分辨率</string>
+    <string name="file_size">文件大小</string>
+    <string name="format">格式</string>
+    <string name="file_format">文件格式</string>
+    
+    <!-- Settings -->
+    <string name="settings_appearance_language">外观与语言</string>
+    <string name="settings_theme">主题模式</string>
+    <string name="settings_theme_summary">浅色 / 深色 / 跟随系统</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_summary">切换应用显示语言</string>
+    
+    <string name="settings_notification_cache">通知与缓存</string>
+    <string name="settings_notifications">通知管理</string>
+    <string name="settings_notifications_summary">跳转到系统通知设置</string>
+    <string name="settings_clear_cache">清理缓存</string>
+    <string name="settings_clear_cache_summary">清理临时文件，释放存储空间</string>
+    
+    <string name="settings_data_management">数据管理</string>
+    <string name="settings_clear_all_data">清除所有数据</string>
+    <string name="settings_clear_all_data_summary">清除草稿、作品、个人信息和设置偏好</string>
+    
+    <string name="settings_about_privacy">关于与隐私</string>
+    <string name="settings_privacy_policy">隐私政策</string>
+    <string name="settings_privacy_policy_summary">查看隐私政策网页</string>
+    <string name="settings_about">关于应用</string>
+    <string name="settings_about_summary">版本 1.0.0 · 醒图安卓训练营</string>
+    
+    <!-- Settings Dialogs -->
+    <string name="language_changed">语言已更改</string>
+    <string name="language_changed_message">为了让新的语言设置完全生效，建议立即重启应用。</string>
+    <string name="cannot_open_notification_settings">无法打开通知设置</string>
+    
+    <string name="clear_cache_title">清理缓存</string>
+    <string name="clear_cache_message">这将清除应用的临时缓存文件，可能会释放存储空间。确定要继续吗？</string>
+    <string name="cache_cleared">缓存已清理</string>
+    <string name="no_cache_to_clear">当前无可清理缓存</string>
+    
+    <string name="about_app_title">关于本应用</string>
+    <string name="about_app_message">版本 1.0.0\n\n醒图安卓训练营 · 图片编辑 Demo 应用。\n\n主要功能：相册浏览、OpenGL 编辑画布、基础参数调节、裁剪、滤镜、旋转与导出。\n\n© 2025 Sean（部分功能在 AI 辅助下完成，并由本人理解与整合）</string>
+    
+    <string name="no_browser_found">未找到可以打开此链接的浏览器应用</string>
+    
+    <string name="clear_all_data_title">清除所有数据</string>
+    <string name="clear_all_data_message">此操作将清除以下所有数据：\n\n• 所有草稿\n• 所有作品\n• 个人信息\n• 设置偏好\n\n此操作不可撤销，确定要继续吗？</string>
+    <string name="confirm_again">再次确认</string>
+    <string name="confirm_clear_all_message">您确定要清除所有数据吗？\n\n这将删除您的所有草稿、作品、个人信息和设置偏好，且无法恢复！</string>
+    <string name="confirm_clear">确定清除</string>
+    <string name="all_data_cleared">所有数据已清除</string>
+    <string name="data_cleared_title">数据已清除</string>
+    <string name="data_cleared_message">所有数据已成功清除。建议重启应用以确保所有更改生效。</string>
+    <string name="clear_data_failed">清除数据失败: %s</string>
+    
+    <!-- Theme Options -->
+    <string name="theme_light">浅色模式</string>
+    <string name="theme_dark">深色模式</string>
+    <string name="theme_system">跟随系统</string>
+    
+    <!-- Language Options -->
+    <string name="language_system">跟随系统</string>
+    <string name="language_chinese">简体中文</string>
+    <string name="language_english">English</string>
+    
+    <!-- Startup Action Options -->
+    <string name="startup_home">主页</string>
+    <string name="startup_camera">打开相机</string>
+    <string name="startup_gallery">进入相册</string>
+    
+    <!-- Auto-save Options -->
+    <string name="autosave_1min">每分钟</string>
+    <string name="autosave_5min">每 5 分钟</string>
+    <string name="autosave_10min">每 10 分钟</string>
+    <string name="autosave_never">从不</string>
+    
+    <!-- Content Descriptions -->
+    <string name="cd_open_camera">打开相机</string>
+    <string name="cd_import_gallery">从相册导入</string>
+    <string name="cd_back">返回</string>
+    <string name="cd_undo">撤销</string>
+    <string name="cd_redo">重做</string>
+    <string name="cd_crop">裁剪</string>
+    <string name="cd_filter">滤镜</string>
+    <string name="cd_adjust">调整</string>
+    <string name="cd_rotate_left">逆时针旋转</string>
+    <string name="cd_rotate_right">顺时针旋转</string>
+    <string name="cd_save">保存</string>
+    <string name="cd_reset">重置</string>
+    <string name="cd_rotate">旋转</string>
+    <string name="cd_close">关闭</string>
+    
+    <!-- Placeholder -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    
+    <!-- Content Types -->
+    <string name="content_type_drafts">草稿</string>
+    <string name="content_type_works">作品</string>
+    <string name="content_type_favorites">收藏</string>
+    
+    <!-- Tab Titles -->
+    <string name="tab_edit">修图</string>
+    <string name="tab_my">我的</string>
+    
+    <!-- Batch Operations -->
+    <string name="please_select_items_to_delete">请先选择要删除的项目</string>
+    <string name="confirm_delete">确认删除</string>
+    <string name="confirm_delete_message">确定要删除选中的 %d 个项目吗？此操作不可恢复。</string>
+    <string name="deleted_drafts_count">已删除 %d 个草稿</string>
+    <string name="deleted_works_count">已删除 %d 个作品</string>
+    <string name="delete_failed">删除失败: %s</string>
+    <string name="please_select_drafts_to_save">请先选择要保存的草稿</string>
+    <string name="save_as_works">保存为作品</string>
+    <string name="save_drafts_as_works_message">将选中的 %d 个草稿保存为作品？保存后草稿将被删除。</string>
+    <string name="saved_works_count">已保存 %d 个作品</string>
+    <string name="please_select_works_to_export">请先选择要导出的作品</string>
+    <string name="export_to_album">导出到相册</string>
+    <string name="export_works_message">将选中的 %d 个作品导出到系统相册？</string>
+    <string name="exported_works_count">已导出 %d 个作品到相册</string>
+    
+    <!-- User Default Values -->
+    <string name="default_nickname">用户昵称</string>
+    <string name="default_user_signature">这个人很懒，什么都没留下</string>
 </resources>

@@ -62,7 +62,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
-                android:contentDescription="返回"
+                android:contentDescription="@string/back"
                 app:tint="@color/white"
                 android:padding="8dp" />
 
@@ -72,7 +72,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="编辑"
+                android:text="@string/edit"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -85,7 +85,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back_up"
-                android:contentDescription="撤销"
+                android:contentDescription="@string/undo"
                 app:tint="@color/white"
                 android:padding="8dp"
                 android:layout_marginEnd="4dp" />
@@ -97,7 +97,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_forward_up"
-                android:contentDescription="重做"
+                android:contentDescription="@string/redo"
                 app:tint="@color/white"
                 android:padding="8dp" />
 
@@ -159,7 +159,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="调整"
+                    android:text="@string/tool_adjust"
                     android:textColor="@color/white"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -170,7 +170,7 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="重置"
+                    android:text="@string/reset"
                     android:textColor="@color/white"
                     android:textSize="12sp"
                     android:minWidth="0dp"
@@ -186,7 +186,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_x_vector"
                     app:tint="@color/white"
-                    android:contentDescription="关闭"
+                    android:contentDescription="@string/close"
                     android:padding="6dp" />
 
             </LinearLayout>
@@ -237,7 +237,7 @@
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="自由"
+                android:text="@string/ratio_free"
                 android:textColor="@color/white"
                 app:chipBackgroundColor="@color/color_overlay_dark" />
 
@@ -321,7 +321,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_refresh"
                 app:tint="@color/white"
-                android:contentDescription="重置"
+                android:contentDescription="@string/reset"
                 android:scaleType="centerInside"
                 android:padding="12dp" />
 
@@ -334,7 +334,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_rotate"
                 app:tint="@color/white"
-                android:contentDescription="旋转"
+                android:contentDescription="@string/rotate"
                 android:scaleType="centerInside"
                 android:padding="12dp" />
 
@@ -353,7 +353,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="取消"
+                android:text="@string/cancel"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
 
@@ -365,7 +365,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="完成"
+                android:text="@string/done"
                 android:textSize="14sp"
                 app:icon="@drawable/ic_check"
                 app:iconGravity="textStart"
@@ -415,13 +415,13 @@
                     android:layout_height="28dp"
                     android:src="@drawable/ic_crop_vector"
                     app:tint="@color/white"
-                    android:contentDescription="裁剪" />
+                    android:contentDescription="@string/tool_crop" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="裁剪"
+                    android:text="@string/tool_crop"
                     android:textColor="@color/white"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -444,13 +444,13 @@
                     android:layout_height="28dp"
                     android:src="@drawable/ic_filter_vector"
                     app:tint="@color/white"
-                    android:contentDescription="滤镜" />
+                    android:contentDescription="@string/tool_filter" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="滤镜"
+                    android:text="@string/tool_filter"
                     android:textColor="@color/white"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -473,13 +473,13 @@
                     android:layout_height="28dp"
                     android:src="@drawable/ic_palette_vector"
                     app:tint="@color/white"
-                    android:contentDescription="调整" />
+                    android:contentDescription="@string/tool_adjust" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="调整"
+                    android:text="@string/tool_adjust"
                     android:textColor="@color/white"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -503,13 +503,13 @@
                     android:src="@drawable/ic_rotate"
                     android:scaleX="-1"
                     app:tint="@color/white"
-                    android:contentDescription="逆时针旋转" />
+                    android:contentDescription="@string/rotate_left" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="左转"
+                    android:text="@string/rotate_left"
                     android:textColor="@color/white"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -532,13 +532,13 @@
                     android:layout_height="28dp"
                     android:src="@drawable/ic_rotate"
                     app:tint="@color/white"
-                    android:contentDescription="顺时针旋转" />
+                    android:contentDescription="@string/rotate_right" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="右转"
+                    android:text="@string/rotate_right"
                     android:textColor="@color/white"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -568,13 +568,13 @@
                     android:layout_height="28dp"
                     android:src="@drawable/ic_save"
                     app:tint="?attr/colorPrimary"
-                    android:contentDescription="保存" />
+                    android:contentDescription="@string/save" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="保存"
+                    android:text="@string/save"
                     android:textColor="?attr/colorPrimary"
                     android:textSize="11sp" />
             </LinearLayout>

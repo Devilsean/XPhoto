@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/color_overlay_dark">
+
+    <!--调整项标题和数值 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/adjustment_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="亮度"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/adjustment_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:minWidth="40dp"
+            android:gravity="end" />
+
+    </LinearLayout>
+
+    <!-- 滑杆 -->
+    <com.google.android.material.slider.Slider
+        android:id="@+id/adjustment_slider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:valueFrom="-100"
+        android:valueTo="100"
+        android:value="0"
+        android:stepSize="1"
+        app:thumbColor="#FF8FA8"
+        app:trackColorActive="#FF8FA8"
+        app:trackColorInactive="@color/white_alpha_30"
+        app:trackHeight="4dp"
+        app:thumbRadius="8dp" />
+
+</LinearLayout>

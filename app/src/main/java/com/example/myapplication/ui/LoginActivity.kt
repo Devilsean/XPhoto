@@ -15,10 +15,10 @@ class LoginActivity : AppCompatActivity(){
         val registerButton: Button =findViewById(R.id.buttonRegister)
 
         loginButton.setOnClickListener{
-            Toast.makeText(this,"登录成功", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show()
         }
         registerButton.setOnClickListener{
-            Toast.makeText(this,"注册成功", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.register_success, Toast.LENGTH_SHORT).show()
         }
     }
 }
