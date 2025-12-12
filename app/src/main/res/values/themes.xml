@@ -46,4 +46,14 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <!-- 全屏无ActionBar主题（用于视频播放器、图片查看器等） -->
+    <style name="Theme.MyApplication.NoActionBar" parent="Base.Theme.MyApplication">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:statusBarColor">@color/color_overlay_black</item>
+        <item name="android:navigationBarColor">@color/color_overlay_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
 </resources>

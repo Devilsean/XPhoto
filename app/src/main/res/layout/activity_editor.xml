@@ -567,7 +567,7 @@
                     android:layout_width="28dp"
                     android:layout_height="28dp"
                     android:src="@drawable/ic_save"
-                    app:tint="#FF8FA8"
+                    app:tint="?attr/colorPrimary"
                     android:contentDescription="保存" />
 
                 <TextView
@@ -575,7 +575,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="保存"
-                    android:textColor="#FF8FA8"
+                    android:textColor="?attr/colorPrimary"
                     android:textSize="11sp" />
             </LinearLayout>
 

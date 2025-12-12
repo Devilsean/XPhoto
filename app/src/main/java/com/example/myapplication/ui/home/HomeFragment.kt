@@ -183,8 +183,22 @@ class HomeFragment : Fragment() {
         try {
             val quickAccessRecyclerView: RecyclerView = view.findViewById(R.id.quick_access_recycler_view)
             quickAccessRecyclerView.layoutManager = GridLayoutManager(context, 4)
-            val quickAccessItems = listOf("滤镜", "裁剪", "拼图", "旋转", "文字", "贴纸", "画笔", "全部")
-            quickAccessRecyclerView.adapter = SimpleTextAdapter(quickAccessItems)
+            
+            // 创建常用功能列表（图标+文字）
+            val quickAccessItems = listOf(
+                QuickAccessItem("滤镜", R.drawable.ic_filter_vector),
+                QuickAccessItem("裁剪", R.drawable.ic_crop_vector),
+                QuickAccessItem("拼图", R.drawable.ic_puzzle),
+                QuickAccessItem("旋转", R.drawable.ic_rotate),
+                QuickAccessItem("文字", R.drawable.ic_text_vector),
+                QuickAccessItem("贴纸", R.drawable.ic_sticker),
+                QuickAccessItem("画笔", R.drawable.ic_brush),
+                QuickAccessItem("全部", R.drawable.ic_grid)
+            )
+            
+            quickAccessRecyclerView.adapter = QuickAccessAdapter(quickAccessItems) { item ->
+                Toast.makeText(context, "暂无巧思，仅占位使用", Toast.LENGTH_SHORT).show()
+            }
             Log.d(TAG, "常用功能网格设置完成")
         } catch (e: Exception) {
             Log.e(TAG, "常用功能网格设置失败", e)

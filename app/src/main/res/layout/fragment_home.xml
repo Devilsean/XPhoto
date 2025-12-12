@@ -73,8 +73,8 @@
                 android:orientation="vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp">
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <!-- 区块标题 -->
                 <TextView
@@ -97,7 +97,7 @@
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/btn_launch_camera"
                         android:layout_width="0dp"
-                        android:layout_height="120dp"
+                        android:layout_height="100dp"
                         android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:clickable="true"
@@ -134,7 +134,7 @@
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/btn_import_gallery"
                         android:layout_width="0dp"
-                        android:layout_height="120dp"
+                        android:layout_height="100dp"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
                         android:clickable="true"
@@ -193,8 +193,8 @@
                 android:orientation="vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp">
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <!-- 区块标题 -->
                 <TextView
@@ -240,8 +240,8 @@
                 android:orientation="vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp">
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <!-- 区块标题 -->
                 <LinearLayout

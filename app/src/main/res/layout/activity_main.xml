@@ -21,11 +21,11 @@
         app:tabGravity="fill"
         app:tabMode="fixed"
         app:tabIndicator="@drawable/tab_indicator"
-        app:tabIndicatorColor="#FFFFB6C1"
+        app:tabIndicatorColor="?attr/colorPrimary"
         app:tabIndicatorGravity="bottom"
         app:tabIndicatorHeight="3dp"
         app:tabTextColor="@color/tab_text_color"
-        app:tabSelectedTextColor="#FF000000"
+        app:tabSelectedTextColor="?attr/colorOnSurface"
         app:tabRippleColor="@android:color/transparent"
         app:tabIconTint="@null" />
 

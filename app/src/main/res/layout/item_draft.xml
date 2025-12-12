@@ -38,6 +38,34 @@
             app:layout_constraintStart_toStartOf="@id/ratio_spacer"
             app:layout_constraintEnd_toEndOf="@id/ratio_spacer" />
 
+        <!-- 选中遮罩层 -->
+        <View
+            android:id="@+id/selection_overlay"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="#4D000000"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 选择复选框 -->
+        <ImageView
+            android:id="@+id/iv_selection_check"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="6dp"
+            android:src="@drawable/ic_check"
+            android:background="@drawable/bg_avatar_circle"
+            android:backgroundTint="?attr/colorPrimary"
+            android:padding="4dp"
+            app:tint="@android:color/white"
+            android:visibility="gone"
+            android:contentDescription="已选择"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
         <!-- 收藏标识 -->
         <ImageView
             android:id="@+id/iv_favorite_badge"
