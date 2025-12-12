@@ -29,13 +29,14 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     private val vertexBuffer: FloatBuffer
     private var imageWidth:Int=0
     private var imageHeight:Int=0
-    private val textureData=floatArrayOf(
+    // 纹理坐标数据（会根据旋转角度动态更新）
+    private var textureData=floatArrayOf(
         0.0f,1.0f,
         1.0f,1.0f,
         0.0f,0.0f,
         1.0f,0.0f
     )
-    private val textureBuffer: FloatBuffer
+    private var textureBuffer: FloatBuffer
 
     private val transformMatrix=FloatArray(16)
     @Volatile
@@ -138,50 +139,25 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     }
     
     /**
-     * 计算旋转后需要的缩放因子，以确保图片完整显示不被裁剪
-     * 当图片旋转时，其边界框会变大，需要缩小图片以适应视口
+     * 判断当前旋转角度是否为90度或270度（即宽高互换的情况）
      */
-    private fun calculateRotationScaleFactor(): Float {
-        if (imageWidth <= 0 || imageHeight <= 0 || viewportWidth <= 0 || viewportHeight <= 0) {
-            return 1.0f
-        }
-        
-        // 将角度转换为弧度
-        val angleRad = Math.toRadians(rotationAngle.toDouble())
-        val cosAngle = kotlin.math.abs(kotlin.math.cos(angleRad)).toFloat()
-        val sinAngle = kotlin.math.abs(kotlin.math.sin(angleRad)).toFloat()
-        
-        // 计算图片的宽高比和视口宽高比
-        val imageRatio = imageWidth.toFloat() / imageHeight.toFloat()
-        val viewportRatio = viewportWidth.toFloat() / viewportHeight.toFloat()
-        
-        // 首先确定原始图片在视口中的显示尺寸（归一化坐标）
-        // 这与 onSurfaceChanged 中的逻辑一致
-        val originalDisplayWidth: Float
-        val originalDisplayHeight: Float
-        if (viewportRatio > imageRatio) {
-            // 视口更宽，图片高度填满，宽度按比例缩小
-            originalDisplayHeight = 2.0f  // 从 -1 到 1
-            originalDisplayWidth = 2.0f * imageRatio / viewportRatio
-        } else {
-            // 视口更高，图片宽度填满，高度按比例缩小
-            originalDisplayWidth = 2.0f  // 从 -1 到 1
-            originalDisplayHeight = 2.0f * viewportRatio / imageRatio
-        }
-        
-        // 计算旋转后图片的边界框尺寸
-        // 旋转后的宽度 = |cos(θ)| * 原宽度 + |sin(θ)| * 原高度
-        // 旋转后的高度 = |sin(θ)| * 原宽度 + |cos(θ)| * 原高度
-        val rotatedWidth = cosAngle * originalDisplayWidth + sinAngle * originalDisplayHeight
-        val rotatedHeight = sinAngle * originalDisplayWidth + cosAngle * originalDisplayHeight
-        
-        // 计算需要的缩放因子，使旋转后的边界框适应原始显示区域
-        // 需要同时考虑宽度和高度的约束
-        val scaleX = originalDisplayWidth / rotatedWidth
-        val scaleY = originalDisplayHeight / rotatedHeight
-        
-        // 取较小值以确保完整显示（不超出原始显示区域）
-        return minOf(scaleX, scaleY)
+    private fun isRotated90or270(): Boolean {
+        val normalizedAngle = ((rotationAngle % 360) + 360) % 360
+        return normalizedAngle == 90f || normalizedAngle == 270f
+    }
+    
+    /**
+     * 获取旋转后的有效图片宽度
+     */
+    private fun getEffectiveImageWidth(): Int {
+        return if (isRotated90or270()) imageHeight else imageWidth
+    }
+    
+    /**
+     * 获取旋转后的有效图片高度
+     */
+    private fun getEffectiveImageHeight(): Int {
+        return if (isRotated90or270()) imageWidth else imageHeight
     }
     
     /**
@@ -352,39 +328,114 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         android.util.Log.d("ImageRenderer", "onSurfaceCreated 完成")
     }
 
+    // 记录上一次的旋转角度，用于检测旋转变化
+    private var lastRotationAngle: Float = 0f
+    
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0,0,width,height)
         // 保存视口尺寸用于旋转缩放计算
         viewportWidth = width
         viewportHeight = height
-        if(imageWidth==0||imageHeight==0||width==0||height==0)return
-        val screenRatio=width.toFloat()/height.toFloat()
-        val imageRatio=imageWidth.toFloat()/imageHeight.toFloat()
-        var left=-1.0f
-        var right=1.0f
-        var bottom=-1.0f
-        var top=1.0f
-        if(screenRatio>imageRatio){
+        // 更新顶点数据
+        updateVertexBuffer()
+    }
+    
+    /**
+     * 根据当前旋转角度更新顶点缓冲区和纹理坐标
+     * 通过调整纹理坐标来实现旋转，而不是使用矩阵旋转
+     * 这样可以避免旋转90度时的伸缩问题
+     */
+    private fun updateVertexBuffer() {
+        if(imageWidth==0||imageHeight==0||viewportWidth==0||viewportHeight==0)return
+        
+        val screenRatio = viewportWidth.toFloat() / viewportHeight.toFloat()
+        
+        // 根据旋转角度确定有效的图片宽高比
+        // 当旋转90度或270度时，宽高互换
+        val effectiveWidth = getEffectiveImageWidth()
+        val effectiveHeight = getEffectiveImageHeight()
+        val imageRatio = effectiveWidth.toFloat() / effectiveHeight.toFloat()
+        
+        var left = -1.0f
+        var right = 1.0f
+        var bottom = -1.0f
+        var top = 1.0f
+        
+        if(screenRatio > imageRatio){
             // 视口更宽，根据高度缩放
-            val newWidth=imageRatio/screenRatio
-            left=-newWidth
-            right=newWidth
-        }else{
+            val newWidth = imageRatio / screenRatio
+            left = -newWidth
+            right = newWidth
+        } else {
             // 视口更高，根据宽度缩放
-            val newHeight=screenRatio/imageRatio
-            bottom=-newHeight
-            top=newHeight
+            val newHeight = screenRatio / imageRatio
+            bottom = -newHeight
+            top = newHeight
         }
-        val newVertexData=floatArrayOf(
-            left,bottom,
-            right,bottom,
-            left,top,
-            right,top
+        
+        val newVertexData = floatArrayOf(
+            left, bottom,
+            right, bottom,
+            left, top,
+            right, top
         )
 
         vertexBuffer.clear()
         vertexBuffer.put(newVertexData)
         vertexBuffer.position(0)
+        
+        // 根据旋转角度更新纹理坐标
+        updateTextureCoordinates()
+        
+        // 记录当前旋转角度
+        lastRotationAngle = rotationAngle
+    }
+    
+    /**
+     * 根据旋转角度更新纹理坐标
+     * 通过调整纹理坐标来实现旋转效果
+     */
+    private fun updateTextureCoordinates() {
+        val normalizedAngle = ((rotationAngle % 360) + 360) % 360
+        
+        // 根据旋转角度设置纹理坐标
+        // 顶点顺序：左下、右下、左上、右上
+        textureData = when (normalizedAngle.toInt()) {
+            90 -> floatArrayOf(
+                // 顺时针旋转90度
+                1.0f, 1.0f,  // 左下顶点
+                1.0f, 0.0f,  // 右下顶点
+                0.0f, 1.0f,  // 左上顶点
+                0.0f, 0.0f   // 右上顶点
+            )
+            180 -> floatArrayOf(
+                // 旋转180度
+                1.0f, 0.0f,  // 左下顶点
+                0.0f, 0.0f,  // 右下顶点
+                1.0f, 1.0f,  // 左上顶点
+                0.0f, 1.0f   // 右上顶点
+            )
+            270 -> floatArrayOf(
+                // 顺时针旋转270度（逆时针90度）
+                0.0f, 0.0f,  // 左下顶点
+                0.0f, 1.0f,  // 右下顶点
+                1.0f, 0.0f,  // 左上顶点
+                1.0f, 1.0f   // 右上顶点
+            )
+            else -> floatArrayOf(
+                // 0度：正常
+                0.0f, 1.0f,
+                1.0f, 1.0f,
+                0.0f, 0.0f,
+                1.0f, 0.0f
+            )
+        }
+        
+        textureBuffer = ByteBuffer.allocateDirect(textureData.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+            .put(textureData)
+        textureBuffer.position(0)
     }
 
     // 5. 在onDrawFrame中绘制矩形
@@ -393,6 +444,17 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         if (pendingCrop) {
             pendingCrop = false
             applyCrop()
+            // 裁剪后需要更新顶点缓冲区
+            updateVertexBuffer()
+        }
+        
+        // 检查旋转角度是否发生变化
+        val normalizedCurrentAngle = ((rotationAngle % 360) + 360) % 360
+        val normalizedLastAngle = ((lastRotationAngle % 360) + 360) % 360
+        
+        if (normalizedCurrentAngle != normalizedLastAngle) {
+            // 旋转角度发生变化，需要更新顶点缓冲区和纹理坐标
+            updateVertexBuffer()
         }
         
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
@@ -408,15 +470,13 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
         transformMatrixHandle=GLES20.glGetUniformLocation(programId,"u_TransformMatrix")
         
         // 4. 设置变换矩阵
+        // 旋转通过纹理坐标处理，这里只处理缩放和平移
         Matrix.setIdentityM(transformMatrix,0)
         
-        // 计算旋转后需要的缩放调整（保持图片完整显示，不拉伸）
-        val rotationScaleFactor = calculateRotationScaleFactor()
-        
-        Matrix.scaleM(transformMatrix,0,scaleFactor * rotationScaleFactor,scaleFactor * rotationScaleFactor,1.0f)
-        Matrix.translateM(transformMatrix,0,offsetX,offsetY,0.0f)
-        // 应用旋转（绕Z轴旋转）
-        Matrix.rotateM(transformMatrix, 0, rotationAngle, 0f, 0f, 1f)
+        // 先应用平移（最后执行）
+        Matrix.translateM(transformMatrix, 0, offsetX * scaleFactor, offsetY * scaleFactor, 0.0f)
+        // 再应用缩放
+        Matrix.scaleM(transformMatrix, 0, scaleFactor, scaleFactor, 1.0f)
 
         // 2. 获取着色器中变量的句柄
         val positionHandle=GLES20.glGetAttribLocation(programId,"a_Position")
@@ -571,12 +631,15 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
     /**
      * 使用FBO离屏渲染导出图片
      * 这样可以只导出图片内容本身，不包含画布背景
+     * 同时应用旋转变换
      */
     private fun renderToFBO(): Bitmap? {
         try {
-            // 获取当前图片的实际尺寸
-            val exportWidth = imageWidth
-            val exportHeight = imageHeight
+            // 根据旋转角度确定导出尺寸
+            // 当旋转90度或270度时，宽高互换
+            val isRotated = isRotated90or270()
+            val exportWidth = if (isRotated) imageHeight else imageWidth
+            val exportHeight = if (isRotated) imageWidth else imageHeight
             
             if (exportWidth <= 0 || exportHeight <= 0) {
                 android.util.Log.e("ImageRenderer", "图片尺寸无效: ${exportWidth}x${exportHeight}")
@@ -622,7 +685,7 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
                 return null
             }
             
-            // 设置视口为图片尺寸
+            // 设置视口为导出尺寸
             GLES20.glViewport(0, 0, exportWidth, exportHeight)
             
             // 清除背景（透明）
@@ -634,7 +697,7 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
             val exportProgramId = filterPrograms[activeFilter] ?: filterPrograms[FilterType.NONE] ?: 0
             GLES20.glUseProgram(exportProgramId)
             
-            // 创建用于导出的顶点数据（填满整个FBO，不需要变换）
+            // 创建用于导出的顶点数据（填满整个FBO）
             val exportVertexData = floatArrayOf(
                 -1.0f, -1.0f,
                 1.0f, -1.0f,
@@ -647,12 +710,55 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
                 .put(exportVertexData)
             exportVertexBuffer.position(0)
             
-            // 设置单位变换矩阵（不应用缩放和平移）
-            val identityMatrix = FloatArray(16)
-            Matrix.setIdentityM(identityMatrix, 0)
+            // 根据旋转角度创建对应的纹理坐标
+            // 原始纹理坐标（对应顶点顺序：左下、右下、左上、右上）
+            // 0度：正常
+            // 90度：顺时针旋转90度
+            // 180度：旋转180度
+            // 270度：顺时针旋转270度（逆时针90度）
+            val normalizedAngle = ((rotationAngle % 360) + 360) % 360
+            val exportTextureData = when (normalizedAngle.toInt()) {
+                90 -> floatArrayOf(
+                    // 顺时针旋转90度：原来的左下变成右下，右下变成右上，左上变成左下，右上变成左上
+                    1.0f, 1.0f,  // 左下顶点 -> 原右下纹理
+                    1.0f, 0.0f,  // 右下顶点 -> 原右上纹理
+                    0.0f, 1.0f,  // 左上顶点 -> 原左下纹理
+                    0.0f, 0.0f   // 右上顶点 -> 原左上纹理
+                )
+                180 -> floatArrayOf(
+                    // 旋转180度
+                    1.0f, 0.0f,  // 左下顶点 -> 原右上纹理
+                    0.0f, 0.0f,  // 右下顶点 -> 原左上纹理
+                    1.0f, 1.0f,  // 左上顶点 -> 原右下纹理
+                    0.0f, 1.0f   // 右上顶点 -> 原左下纹理
+                )
+                270 -> floatArrayOf(
+                    // 顺时针旋转270度（逆时针90度）
+                    0.0f, 0.0f,  // 左下顶点 -> 原左上纹理
+                    0.0f, 1.0f,  // 右下顶点 -> 原左下纹理
+                    1.0f, 0.0f,  // 左上顶点 -> 原右上纹理
+                    1.0f, 1.0f   // 右上顶点 -> 原右下纹理
+                )
+                else -> floatArrayOf(
+                    // 0度：正常
+                    0.0f, 1.0f,
+                    1.0f, 1.0f,
+                    0.0f, 0.0f,
+                    1.0f, 0.0f
+                )
+            }
+            val exportTextureBuffer = ByteBuffer.allocateDirect(exportTextureData.size * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
+                .put(exportTextureData)
+            exportTextureBuffer.position(0)
+            
+            // 设置变换矩阵（不需要旋转，因为已经通过纹理坐标处理了）
+            val exportMatrix = FloatArray(16)
+            Matrix.setIdentityM(exportMatrix, 0)
             
             val exportTransformHandle = GLES20.glGetUniformLocation(exportProgramId, "u_TransformMatrix")
-            GLES20.glUniformMatrix4fv(exportTransformHandle, 1, false, identityMatrix, 0)
+            GLES20.glUniformMatrix4fv(exportTransformHandle, 1, false, exportMatrix, 0)
             
             // 传递调整参数
             if (activeFilter == FilterType.NONE) {
@@ -688,7 +794,7 @@ class ImageRenderer (private val context: Context, private val imageUri: Uri): G
             
             // 传递顶点数据
             GLES20.glVertexAttribPointer(positionHandle, 2, GLES20.GL_FLOAT, false, 0, exportVertexBuffer)
-            GLES20.glVertexAttribPointer(texCoordHandle, 2, GLES20.GL_FLOAT, false, 0, textureBuffer)
+            GLES20.glVertexAttribPointer(texCoordHandle, 2, GLES20.GL_FLOAT, false, 0, exportTextureBuffer)
             
             // 绑定原始纹理
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0)

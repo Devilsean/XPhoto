@@ -19,10 +19,6 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.chip.Chip
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.slider.Slider
-import com.google.android.material.textfield.TextInputEditText
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -195,9 +191,14 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             enterAdjustmentMode()
         }
         
-        // 旋转按钮
-        findViewById<LinearLayout>(R.id.rotate_button).setOnClickListener {
-            showRotateDialog()
+        // 旋转按钮（逆时针90度）
+        findViewById<LinearLayout>(R.id.rotate_left_button).setOnClickListener {
+            rotateImage(-90f)
+        }
+        
+        // 旋转按钮（顺时针90度）
+        findViewById<LinearLayout>(R.id.rotate_right_button).setOnClickListener {
+            rotateImage(90f)
         }
         
         // 灰度按钮（隐藏）
@@ -308,86 +309,34 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     }
     
     /**
-     * 显示旋转角度对话框
+     * 旋转图片（增量旋转）
+     * @param degrees 旋转角度，正值为顺时针，负值为逆时针
      */
-    private fun showRotateDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_rotate_angle, null)
-        val angleInput = dialogView.findViewById<TextInputEditText>(R.id.angle_input)
-        val angleSlider = dialogView.findViewById<Slider>(R.id.angle_slider)
-        val chip90Ccw = dialogView.findViewById<Chip>(R.id.chip_90_ccw)
-        val chip90Cw = dialogView.findViewById<Chip>(R.id.chip_90_cw)
-        val chip180 = dialogView.findViewById<Chip>(R.id.chip_180)
-        val chipCustom = dialogView.findViewById<Chip>(R.id.chip_custom)
-        
-        // 设置当前旋转角度
-        val currentAngle = renderer.getRotation()
-        angleInput.setText(currentAngle.toInt().toString())
-        angleSlider.value = currentAngle.coerceIn(-180f, 180f)
-        
-        // 滑动条变化时更新输入框
-        angleSlider.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) {
-                angleInput.setText(value.toInt().toString())
-            }
-        }
-        
-        // 输入框变化时更新滑动条
-        angleInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                val text = angleInput.text?.toString() ?: "0"
-                val angle = text.toFloatOrNull() ?: 0f
-                val clampedAngle = angle.coerceIn(-180f, 180f)
-                angleSlider.value = clampedAngle
-            }
-        }
-        
-        // 快捷按钮点击事件
-        chip90Ccw.setOnClickListener {
-            angleInput.setText("-90")
-            angleSlider.value = -90f
-        }
-        
-        chip90Cw.setOnClickListener {
-            angleInput.setText("90")
-            angleSlider.value = 90f
-        }
-        
-        chip180.setOnClickListener {
-            angleInput.setText("180")
-            angleSlider.value = 180f
-        }
-        
-        chipCustom.setOnClickListener {
-            angleInput.requestFocus()
-            angleInput.selectAll()
-        }
-        
-        MaterialAlertDialogBuilder(this)
-            .setView(dialogView)
-            .setPositiveButton("应用") { _, _ ->
-                val text = angleInput.text?.toString() ?: "0"
-                val angle = text.toFloatOrNull() ?: 0f
-                applyRotation(angle)
-            }
-            .setNegativeButton("取消", null)
-            .setNeutralButton("重置") { _, _ ->
-                applyRotation(0f)
-            }
-            .show()
-    }
-    
-    /**
-     * 应用旋转角度
-     */
-    private fun applyRotation(angle: Float) {
+    private fun rotateImage(degrees: Float) {
         // 保存当前状态到历史记录
         saveCurrentStateToHistory()
         
-        renderer.setRotation(angle)
+        // 获取当前角度并增加旋转
+        val currentAngle = renderer.getRotation()
+        var newAngle = currentAngle + degrees
+        
+        // 将角度规范化到 0-360 范围内
+        while (newAngle >= 360f) newAngle -= 360f
+        while (newAngle < 0f) newAngle += 360f
+        
+        // 只保留 0, 90, 180, 270 四个角度
+        newAngle = when {
+            newAngle < 45f -> 0f
+            newAngle < 135f -> 90f
+            newAngle < 225f -> 180f
+            newAngle < 315f -> 270f
+            else -> 0f
+        }
+        
+        renderer.setRotation(newAngle)
         glSurfaceView.requestRender()
         autoSaveDraft()
         
-        Toast.makeText(this, "已旋转 ${angle.toInt()}°", Toast.LENGTH_SHORT).show()
     }
     /**
      * 设置调整RecyclerView
@@ -473,6 +422,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             scaleFactor = renderer.scaleFactor,
             offsetX = renderer.offsetX,
             offsetY = renderer.offsetY,
+            rotationAngle = renderer.getRotation(),
             cropRect = renderer.getCropRect(),
             isGrayscaleEnabled = renderer.isGrayscaleEnabled,
             filterType = renderer.currentFilter
@@ -523,6 +473,9 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         renderer.scaleFactor = state.scaleFactor
         renderer.offsetX = state.offsetX
         renderer.offsetY = state.offsetY
+        
+        // 恢复旋转角度
+        renderer.setRotation(state.rotationAngle)
         
         // 恢复裁剪
         state.cropRect?.let { renderer.setCropRect(it) }
@@ -625,23 +578,33 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     
     /**
      * 计算图片在GLSurfaceView中的实际显示区域
+     * 考虑旋转角度：当旋转90度或270度时，图片的宽高会互换
      */
     private fun calculateImageDisplayRect() {
         val viewWidth = glSurfaceView.width.toFloat()
         val viewHeight = glSurfaceView.height.toFloat()
         
         // 获取图片尺寸
-        val imageWidth = renderer.getImageWidth().toFloat()
-        val imageHeight = renderer.getImageHeight().toFloat()
+        val originalImageWidth = renderer.getImageWidth().toFloat()
+        val originalImageHeight = renderer.getImageHeight().toFloat()
         
-        if (imageWidth <= 0 || imageHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) {
+        if (originalImageWidth <= 0 || originalImageHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) {
             // 如果尺寸无效，使用整个视图
             imageDisplayRect.set(0f, 0f, viewWidth, viewHeight)
             return
         }
         
+        // 检查当前旋转角度是否为90度或270度
+        val rotationAngle = renderer.getRotation()
+        val normalizedAngle = ((rotationAngle % 360) + 360) % 360
+        val isRotated90or270 = normalizedAngle == 90f || normalizedAngle == 270f
+        
+        // 根据旋转角度确定有效的图片宽高
+        val effectiveImageWidth = if (isRotated90or270) originalImageHeight else originalImageWidth
+        val effectiveImageHeight = if (isRotated90or270) originalImageWidth else originalImageHeight
+        
         val screenRatio = viewWidth / viewHeight
-        val imageRatio = imageWidth / imageHeight
+        val imageRatio = effectiveImageWidth / effectiveImageHeight
         
         val displayWidth: Float
         val displayHeight: Float
@@ -667,23 +630,28 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         lifecycleScope.launch {
             try {
                 val draft = draftRepository.getDraftById(draftId)
-            if (draft != null) {
-                //恢复编辑状态
-                renderer.isGrayscaleEnabled = draft.isGrayscaleEnabled
-                
-                // 恢复滤镜
-                draft.filterType?.let { filterTypeName ->
-                    try {
-                        val filterType = FilterType.valueOf(filterTypeName)
-                        renderer.currentFilter = filterType
-                        filterAdapter.setSelectedFilter(filterType)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                if (draft != null) {
+                    //恢复编辑状态
+                    renderer.isGrayscaleEnabled = draft.isGrayscaleEnabled
+                    
+                    // 恢复滤镜
+                    draft.filterType?.let { filterTypeName ->
+                        try {
+                            val filterType = FilterType.valueOf(filterTypeName)
+                            renderer.currentFilter = filterType
+                            filterAdapter.setSelectedFilter(filterType)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
-                }
-                
-                renderer.scaleFactor = draft.scaleFactor
+                    
+                    renderer.scaleFactor = draft.scaleFactor
                     renderer.offsetX = draft.offsetX
+                    renderer.offsetY = draft.offsetY
+                    
+                    // 恢复旋转角度
+                    renderer.setRotation(draft.rotationAngle)
+                    
                     // 恢复调整参数
                     renderer.adjustmentParams.brightness = draft.brightness
                     renderer.adjustmentParams.contrast = draft.contrast
@@ -694,7 +662,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     renderer.adjustmentParams.tint = draft.tint
                     renderer.adjustmentParams.clarity = draft.clarity
                     renderer.adjustmentParams.sharpen = draft.sharpen
-                    renderer.offsetY = draft.offsetY
                     
                     // 恢复裁剪状态
                     if (draft.cropLeft != null && draft.cropTop != null &&
@@ -734,6 +701,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     scaleFactor = renderer.scaleFactor,
                     offsetX = renderer.offsetX,
                     offsetY = renderer.offsetY,
+                    rotationAngle = renderer.getRotation(),
                     cropLeft = cropRect?.left,
                     cropTop = cropRect?.top,
                     cropRight = cropRect?.right,
@@ -782,6 +750,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                     scaleFactor = renderer.scaleFactor,
                     offsetX = renderer.offsetX,
                     offsetY = renderer.offsetY,
+                    rotationAngle = renderer.getRotation(),
                     cropLeft = cropRect?.left,
                     cropTop = cropRect?.top,
                     cropRight = cropRect?.right,
