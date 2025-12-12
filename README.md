@@ -152,6 +152,7 @@ cd MyApplication
 set JAVA_HOME=C:\Program Files\Java\jdk-17
 
 # macOS/Linux
+
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ```
 

@@ -119,6 +119,7 @@
     <!-- Editor Exit Dialog -->
     <string name="exit_editor">Exit Editor</string>
     <string name="exit_editor_message">Current edit state has been auto-saved as draft.\nWould you like to save as a work?</string>
+    <string name="save_as_work_dialog">Save Work</string>
     <string name="keep_draft_only">Keep Draft Only</string>
     
     <!-- Editor Tools -->

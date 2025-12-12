@@ -38,6 +38,23 @@ import java.io.OutputStream
 class MyContentFragment : Fragment() {
     private var contentType: String? = null
     
+    companion object {
+        private const val ARG_CONTENT_TYPE = "content_type"
+        
+        // 使用固定常量而不是本地化字符串来标识内容类型
+        const val TYPE_DRAFTS = "drafts"
+        const val TYPE_WORKS = "works"
+        const val TYPE_FAVORITES = "favorites"
+
+        fun newInstance(contentType: String): MyContentFragment {
+            return MyContentFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_CONTENT_TYPE, contentType)
+                }
+            }
+        }
+    }
+    
     // 批量选择模式
     private var isSelectionMode = false
     private val selectedDraftIds = mutableSetOf<Long>()
@@ -100,11 +117,11 @@ class MyContentFragment : Fragment() {
         draftRepository = app.draftRepository
         editedImageRepository = app.editedImageRepository
 
-        // 根据contentType显示不同的数据
+        // 根据contentType显示不同的数据（使用固定常量）
         when (contentType) {
-            getString(R.string.content_type_works) -> setupWorksView()
-            getString(R.string.content_type_drafts) -> setupDraftsView()
-            getString(R.string.content_type_favorites) -> setupFavoritesView()
+            TYPE_WORKS -> setupWorksView()
+            TYPE_DRAFTS -> setupDraftsView()
+            TYPE_FAVORITES -> setupFavoritesView()
             else -> setupEmptyView()
         }
         
@@ -139,16 +156,13 @@ class MyContentFragment : Fragment() {
             batchExportWorks()
         }
         
-        // 根据内容类型显示/隐藏按钮
-        val draftsType = getString(R.string.content_type_drafts)
-        val worksType = getString(R.string.content_type_works)
-        val favoritesType = getString(R.string.content_type_favorites)
+        // 根据内容类型显示/隐藏按钮（使用固定常量）
         when (contentType) {
-            draftsType -> {
+            TYPE_DRAFTS -> {
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_save)?.visibility = View.VISIBLE
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_export)?.visibility = View.GONE
             }
-            worksType, favoritesType -> {
+            TYPE_WORKS, TYPE_FAVORITES -> {
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_save)?.visibility = View.GONE
                 batchActionBar?.findViewById<LinearLayout>(R.id.btn_batch_export)?.visibility = View.VISIBLE
             }
@@ -388,15 +402,12 @@ class MyContentFragment : Fragment() {
     }
     
     private fun selectAll() {
-        val draftsType = getString(R.string.content_type_drafts)
-        val worksType = getString(R.string.content_type_works)
-        val favoritesType = getString(R.string.content_type_favorites)
         when (contentType) {
-            draftsType -> {
+            TYPE_DRAFTS -> {
                 selectedDraftIds.clear()
                 selectedDraftIds.addAll(currentDrafts.map { it.id })
             }
-            worksType, favoritesType -> {
+            TYPE_WORKS, TYPE_FAVORITES -> {
                 selectedImageIds.clear()
                 selectedImageIds.addAll(currentImages.map { it.id })
             }
@@ -406,9 +417,8 @@ class MyContentFragment : Fragment() {
     }
     
     private fun updateSelectionCount() {
-        val draftsType = getString(R.string.content_type_drafts)
         val count = when (contentType) {
-            draftsType -> selectedDraftIds.size
+            TYPE_DRAFTS -> selectedDraftIds.size
             else -> selectedImageIds.size
         }
         tvSelectionCount?.text = getString(R.string.selected_count, count)
@@ -417,9 +427,8 @@ class MyContentFragment : Fragment() {
     // ==================== 批量操作方法 ====================
     
     private fun showDeleteConfirmDialog() {
-        val draftsType = getString(R.string.content_type_drafts)
         val count = when (contentType) {
-            draftsType -> selectedDraftIds.size
+            TYPE_DRAFTS -> selectedDraftIds.size
             else -> selectedImageIds.size
         }
         
@@ -441,15 +450,12 @@ class MyContentFragment : Fragment() {
     private fun performBatchDelete() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val draftsType = getString(R.string.content_type_drafts)
-                val worksType = getString(R.string.content_type_works)
-                val favoritesType = getString(R.string.content_type_favorites)
                 when (contentType) {
-                    draftsType -> {
+                    TYPE_DRAFTS -> {
                         draftRepository.deleteDrafts(selectedDraftIds.toList())
                         Toast.makeText(requireContext(), getString(R.string.deleted_drafts_count, selectedDraftIds.size), Toast.LENGTH_SHORT).show()
                     }
-                    worksType, favoritesType -> {
+                    TYPE_WORKS, TYPE_FAVORITES -> {
                         // 删除文件
                         selectedImageIds.forEach { id ->
                             currentImages.find { it.id == id }?.let { image ->
@@ -614,15 +620,4 @@ class MyContentFragment : Fragment() {
         }
     }
 
-    companion object {
-        private const val ARG_CONTENT_TYPE = "content_type"
-
-        fun newInstance(contentType: String): MyContentFragment {
-            return MyContentFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_CONTENT_TYPE, contentType)
-                }
-            }
-        }
-    }
 }

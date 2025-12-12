@@ -119,7 +119,7 @@
     <!-- Editor Exit Dialog -->
     <string name="exit_editor">退出编辑</string>
     <string name="exit_editor_message">当前编辑状态已自动保存为草稿。\n是否要保存为作品？</string>
-    <string name="save_as_work">保存作品</string>
+    <string name="save_as_work_dialog">保存作品</string>
     <string name="keep_draft_only">仅保留草稿</string>
     
     <!-- Editor Tools -->

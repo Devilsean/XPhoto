@@ -868,7 +868,7 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         AlertDialog.Builder(this)
             .setTitle(R.string.exit_editor)
             .setMessage(R.string.exit_editor_message)
-            .setPositiveButton(R.string.save_as_work) { _, _ ->
+            .setPositiveButton(R.string.save_as_work_dialog) { _, _ ->
                 exitAfterSave = true
                 renderer.takeScreenshot()
                 glSurfaceView.requestRender()
