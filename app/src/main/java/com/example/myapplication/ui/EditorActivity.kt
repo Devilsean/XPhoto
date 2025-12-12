@@ -210,8 +210,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         findViewById<Button>(R.id.grayscale_button).setOnClickListener {
             renderer.isGrayscaleEnabled = !renderer.isGrayscaleEnabled
             glSurfaceView.requestRender()
-            //状态改变时自动保存草稿
-            autoSaveDraft()
         }
         
         // 保存按钮 - 保存为作品（生成最终图片并跳转到作品查看界面）
@@ -309,7 +307,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         renderer.currentFilter = filter
         glSurfaceView.requestRender()
-        autoSaveDraft()
         
         // 应用滤镜后退出滤镜模式
         exitFilterMode()
@@ -343,8 +340,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         renderer.setRotation(newAngle)
         glSurfaceView.requestRender()
-        autoSaveDraft()
-        
     }
     /**
      * 设置调整RecyclerView
@@ -418,9 +413,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         // 实时渲染
         glSurfaceView.requestRender()
-        
-        // 自动保存草稿
-        autoSaveDraft()
     }
     
     /**
@@ -430,7 +422,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         renderer.adjustmentParams.reset()
         adjustmentAdapter.updateValues()
         glSurfaceView.requestRender()
-        autoSaveDraft()
         Toast.makeText(this, R.string.all_adjustments_reset, Toast.LENGTH_SHORT).show()
     }
     
@@ -544,9 +535,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         // 更新按钮状态
         updateUndoRedoButtons()
-        
-        // 自动保存
-        autoSaveDraft()
     }
     
     /**
@@ -618,7 +606,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             // 在GL线程中等待裁剪完成后，回到主线程保存状态
             glSurfaceView.post {
                 saveCropStateToHistory()
-                autoSaveDraft()
             }
         }
         
@@ -772,55 +759,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         }
     }
 
-    private fun autoSaveDraft() {
-        if (originalImageUri == null) return
-        
-        lifecycleScope.launch {
-            try {
-                // 获取裁剪信息
-                val cropRect = renderer.getCropRect()
-                
-                val draft = Draft(
-                    id = currentDraftId ?: 0,  // 如果是新草稿，id为0
-                    originalImageUri = originalImageUri!!,
-                    isGrayscaleEnabled = renderer.isGrayscaleEnabled,
-                    filterType = renderer.currentFilter.name,
-                    scaleFactor = renderer.scaleFactor,
-                    offsetX = renderer.offsetX,
-                    offsetY = renderer.offsetY,
-                    rotationAngle = renderer.getRotation(),
-                    cropLeft = cropRect?.left,
-                    cropTop = cropRect?.top,
-                    cropRight = cropRect?.right,
-                    cropBottom = cropRect?.bottom,
-                    // 保存调整参数
-                    brightness = renderer.adjustmentParams.brightness,
-                    contrast = renderer.adjustmentParams.contrast,
-                    saturation = renderer.adjustmentParams.saturation,
-                    highlights = renderer.adjustmentParams.highlights,
-                    shadows = renderer.adjustmentParams.shadows,
-                    temperature = renderer.adjustmentParams.temperature,
-                    tint = renderer.adjustmentParams.tint,
-                    clarity = renderer.adjustmentParams.clarity,
-                    sharpen = renderer.adjustmentParams.sharpen,
-                    modifiedAt = System.currentTimeMillis()
-                )
-                
-                // 保存或更新草稿
-                val draftId = draftRepository.saveOrUpdateDraft(draft)
-                if (currentDraftId == null) {
-                    currentDraftId = draftId
-                    // 第一次保存时显示提示
-                    Toast.makeText(this@EditorActivity, R.string.draft_auto_saved, Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                // 静默失败，不影响用户体验
-                e.printStackTrace()
-                android.util.Log.e("EditorActivity", "自动保存草稿失败", e)
-            }
-        }
-    }
-
     private fun saveDraft() {
         if (originalImageUri == null) return
         
@@ -874,11 +812,68 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 glSurfaceView.requestRender()
             }
             .setNegativeButton(R.string.keep_draft_only) { _, _ ->
-                // 草稿已自动保存，直接退出
+                // 保存为草稿后退出
+                saveDraftAndExit()
+            }
+            .setNeutralButton(R.string.discard_changes) { _, _ ->
+                // 放弃更改，直接退出
                 finish()
             }
-            .setNeutralButton(R.string.cancel, null)
             .show()
+    }
+    
+    /**
+     * 保存草稿并退出
+     */
+    private fun saveDraftAndExit() {
+        if (originalImageUri == null) {
+            finish()
+            return
+        }
+        
+        lifecycleScope.launch {
+            try {
+                val cropRect = renderer.getCropRect()
+                
+                val draft = Draft(
+                    id = currentDraftId ?: 0,
+                    originalImageUri = originalImageUri!!,
+                    isGrayscaleEnabled = renderer.isGrayscaleEnabled,
+                    filterType = renderer.currentFilter.name,
+                    scaleFactor = renderer.scaleFactor,
+                    offsetX = renderer.offsetX,
+                    offsetY = renderer.offsetY,
+                    rotationAngle = renderer.getRotation(),
+                    cropLeft = cropRect?.left,
+                    cropTop = cropRect?.top,
+                    cropRight = cropRect?.right,
+                    cropBottom = cropRect?.bottom,
+                    brightness = renderer.adjustmentParams.brightness,
+                    contrast = renderer.adjustmentParams.contrast,
+                    saturation = renderer.adjustmentParams.saturation,
+                    highlights = renderer.adjustmentParams.highlights,
+                    shadows = renderer.adjustmentParams.shadows,
+                    temperature = renderer.adjustmentParams.temperature,
+                    tint = renderer.adjustmentParams.tint,
+                    clarity = renderer.adjustmentParams.clarity,
+                    sharpen = renderer.adjustmentParams.sharpen,
+                    modifiedAt = System.currentTimeMillis()
+                )
+                
+                draftRepository.saveOrUpdateDraft(draft)
+                
+                runOnUiThread {
+                    Toast.makeText(this@EditorActivity, R.string.draft_saved, Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    Toast.makeText(this@EditorActivity, getString(R.string.save_draft_failed, e.message), Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -889,8 +884,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
     override fun onPause() {
         super.onPause()
         glSurfaceView.onPause()
-        // 暂停时自动保存草稿
-        autoSaveDraft()
     }
     
     override fun onDestroy() {
@@ -974,8 +967,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 activePointerId = MotionEvent.INVALID_POINTER_ID
                 isScaling = false
-                // 触摸结束时自动保存草稿
-                autoSaveDraft()
             }
         }
         return true
@@ -1050,11 +1041,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
                 glSurfaceView.requestRender()
             }
             
-            addListener(object : android.animation.AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: android.animation.Animator) {
-                    autoSaveDraft()
-                }
-            })
             
             start()
         }
@@ -1140,8 +1126,6 @@ class EditorActivity : AppCompatActivity(), ScreenshotListener {
         
         override fun onScaleEnd(detector: ScaleGestureDetector) {
             isScaling = false
-            // 缩放结束时自动保存草稿
-            autoSaveDraft()
         }
     }
 

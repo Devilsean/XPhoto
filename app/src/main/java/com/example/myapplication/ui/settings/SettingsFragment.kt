@@ -47,24 +47,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             setOnPreferenceChangeListener { _, newValue ->
                 val locale = LocaleListCompat.forLanguageTags(newValue as String)
                 AppCompatDelegate.setApplicationLocales(locale)
-
-                context?.let { ctx ->
-                    MaterialAlertDialogBuilder(ctx)
-                        .setTitle(R.string.language_changed)
-                        .setMessage(R.string.language_changed_message)
-                        .setPositiveButton(R.string.restart_now) { _, _ ->
-                            val intent = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
-                            val componentName = intent?.component
-                            if (componentName != null) {
-                                val mainIntent = Intent.makeRestartActivityTask(componentName)
-                                ctx.startActivity(mainIntent)
-                            }
-                            Runtime.getRuntime().exit(0)
-                        }
-                        .setNegativeButton(R.string.later, null)
-                        .setCancelable(false)
-                        .show()
-                }
                 true
             }
         }

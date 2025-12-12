@@ -118,9 +118,10 @@
     
     <!-- Editor Exit Dialog -->
     <string name="exit_editor">退出编辑</string>
-    <string name="exit_editor_message">当前编辑状态已自动保存为草稿。\n是否要保存为作品？</string>
+    <string name="exit_editor_message">您有未保存的编辑内容。\n请选择如何处理：</string>
     <string name="save_as_work_dialog">保存作品</string>
-    <string name="keep_draft_only">仅保留草稿</string>
+    <string name="keep_draft_only">保存草稿</string>
+    <string name="discard_changes">放弃更改</string>
     
     <!-- Editor Tools -->
     <string name="tool_crop">裁剪</string>

@@ -118,9 +118,10 @@
     
     <!-- Editor Exit Dialog -->
     <string name="exit_editor">Exit Editor</string>
-    <string name="exit_editor_message">Current edit state has been auto-saved as draft.\nWould you like to save as a work?</string>
+    <string name="exit_editor_message">You have unsaved edits.\nPlease choose how to proceed:</string>
     <string name="save_as_work_dialog">Save Work</string>
-    <string name="keep_draft_only">Keep Draft Only</string>
+    <string name="keep_draft_only">Save Draft</string>
+    <string name="discard_changes">Discard Changes</string>
     
     <!-- Editor Tools -->
     <string name="tool_crop">Crop</string>
